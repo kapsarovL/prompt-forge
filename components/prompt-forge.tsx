@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { GoogleGenAI, Type } from "@google/genai";
 import { Sparkles, Copy, Check, Loader2, Wand2, Terminal, PenTool, BarChart, MessageSquare, History, Trash2, ArrowRight, Download, MessageSquarePlus, Star, X, Save, GitCommit, BookmarkPlus, Library, Search, CheckCircle2, AlertTriangle, Lightbulb, Zap, Shield, Cpu, ChevronDown } from "lucide-react";
 import { ForgeNavbar } from "@/components/forge-navbar";
 import { ForgeFooter } from "@/components/forge-footer";
@@ -204,15 +205,28 @@ export function PromptForge() {
         const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
         if (!apiKey) throw new Error("API key missing");
         const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
-          contents: `Original Prompt:\n${generatedPrompt}\n\nEvaluation Weaknesses:\n${evaluationResult.weaknesses.join("\n")}\n\nEvaluation Suggestions:\n${evaluationResult.suggestions.join("\n")}`,
-          config: {
-            systemInstruction: "You are an expert prompt engineer. Rewrite the provided prompt to address all identified weaknesses and incorporate all suggestions. Return ONLY the improved prompt text.",
-            temperature: 0.4,
+
+        const maxRetries = 3;
+        let response;
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+          try {
+            response = await ai.models.generateContent({
+              model: model,
+              contents: `Original Prompt:\n${generatedPrompt}\n\nEvaluation Weaknesses:\n${evaluationResult.weaknesses.join("\n")}\n\nEvaluation Suggestions:\n${evaluationResult.suggestions.join("\n")}`,
+              config: {
+                systemInstruction: "You are an expert prompt engineer. Rewrite the provided prompt to address all identified weaknesses and incorporate all suggestions. Return ONLY the improved prompt text.",
+                temperature: 0.4,
+              }
+            });
+            break;
+          } catch (err: any) {
+            const isRetryable = err?.status === 503 || err?.status === 429;
+            if (!isRetryable || attempt === maxRetries - 1) throw err;
+            await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
           }
-        });
-        if (response.text) {
+        }
+
+        if (response?.text) {
           const newPrompt = response.text.trim();
           setGeneratedPrompt(newPrompt);
           setIsEvaluationOpen(false);
@@ -273,16 +287,27 @@ export function PromptForge() {
 
         const promptText = `Category: ${category}\nDescription: ${description}`;
 
-        const response = await ai.models.generateContent({
-          model: model,
-          contents: promptText,
-          config: {
-            systemInstruction,
-            temperature: 0.7,
-          },
-        });
+        const maxRetries = 3;
+        let response;
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+          try {
+            response = await ai.models.generateContent({
+              model: model,
+              contents: promptText,
+              config: {
+                systemInstruction,
+                temperature: 0.7,
+              },
+            });
+            break;
+          } catch (err: any) {
+            const isRetryable = err?.status === 503 || err?.status === 429;
+            if (!isRetryable || attempt === maxRetries - 1) throw err;
+            await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          }
+        }
 
-        if (response.text) {
+        if (response?.text) {
           const promptText = response.text.trim();
           setGeneratedPrompt(promptText);
 
@@ -307,7 +332,12 @@ export function PromptForge() {
         }
       } catch (err: any) {
         console.error("Error generating prompt:", err);
-        setError(err.message || "An unexpected error occurred while generating the prompt.");
+        const message = err?.status === 503
+          ? "The service is temporarily unavailable. Please try again in a moment."
+          : err?.status === 429
+          ? "API quota exceeded. Please check your Gemini API key and billing, or try a different model."
+          : err.message || "An unexpected error occurred while generating the prompt.";
+        setError(message);
       } finally {
         setIsGenerating(false);
       }
@@ -380,51 +410,68 @@ export function PromptForge() {
 
   Provide a score from 1-10 for each criterion and an overall rating. Give constructive, actionable feedback.`;
 
-        const response = await ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
-          contents: `Evaluate this prompt for a Gemini model:\n\n${generatedPrompt}`,
-          config: {
-            systemInstruction,
-            temperature: 0.3,
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                rating: { type: Type.NUMBER, description: "Overall rating out of 10" },
-                criteria: {
+        const maxRetries = 3;
+        let lastError: any;
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+          try {
+            const response = await ai.models.generateContent({
+              model: model,
+              contents: `Evaluate this prompt for a Gemini model:\n\n${generatedPrompt}`,
+              config: {
+                systemInstruction,
+                temperature: 0.3,
+                responseMimeType: "application/json",
+                responseSchema: {
                   type: Type.OBJECT,
                   properties: {
-                    clarity: { type: Type.NUMBER, description: "Clarity score 1-10" },
-                    specificity: { type: Type.NUMBER, description: "Specificity score 1-10" },
-                    misinterpretationRisk: { type: Type.NUMBER, description: "Risk of misinterpretation 1-10 (10 is high risk, 1 is low risk)" }
+                    rating: { type: Type.NUMBER, description: "Overall rating out of 10" },
+                    criteria: {
+                      type: Type.OBJECT,
+                      properties: {
+                        clarity: { type: Type.NUMBER, description: "Clarity score 1-10" },
+                        specificity: { type: Type.NUMBER, description: "Specificity score 1-10" },
+                        misinterpretationRisk: { type: Type.NUMBER, description: "Risk of misinterpretation 1-10 (10 is high risk, 1 is low risk)" }
+                      },
+                      required: ["clarity", "specificity", "misinterpretationRisk"]
+                    },
+                    strengths: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Identify 1-3 strengths" },
+                    weaknesses: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Identify 1-3 weaknesses or missing context" },
+                    suggestions: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Suggest 1-3 specific improvements" }
                   },
-                  required: ["clarity", "specificity", "misinterpretationRisk"]
-                },
-                strengths: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Identify 1-3 strengths" },
-                weaknesses: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Identify 1-3 weaknesses or missing context" },
-                suggestions: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Suggest 1-3 specific improvements" }
+                  required: ["rating", "criteria", "strengths", "weaknesses", "suggestions"]
+                }
               },
-              required: ["rating", "criteria", "strengths", "weaknesses", "suggestions"]
-            }
-          },
-        });
+            });
 
-        if (response.text) {
-               try {
-                 const parsed = JSON.parse(response.text.trim());
-                 setEvaluationResult(parsed);
-               } catch (e) {
-                 setEvaluationError("Failed to parse evaluation results.");
-               }
-             } else {
-               setEvaluationError("Could not evaluate the prompt.");
-             }
-           } catch (err: any) {
-             console.error("Error evaluating prompt:", err);
-             setEvaluationError("An error occurred while evaluating the prompt.");
-           } finally {
-             setIsEvaluating(false);
-           }
+            if (response.text) {
+              try {
+                const parsed = JSON.parse(response.text.trim());
+                setEvaluationResult(parsed);
+              } catch (e) {
+                setEvaluationError("Failed to parse evaluation results.");
+              }
+            } else {
+              setEvaluationError("Could not evaluate the prompt.");
+            }
+            return; // success
+          } catch (err: any) {
+            lastError = err;
+            const isRetryable = err?.status === 503 || err?.status === 429;
+            if (!isRetryable || attempt === maxRetries - 1) throw err;
+            await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          }
+        }
+      } catch (err: any) {
+        console.error("Error evaluating prompt:", err);
+        const message = err?.status === 503
+          ? "The service is temporarily unavailable. Please try again in a moment."
+          : err?.status === 429
+          ? "API quota exceeded. Please check your Gemini API key and billing, or try a different model."
+          : "An error occurred while evaluating the prompt.";
+        setEvaluationError(message);
+      } finally {
+        setIsEvaluating(false);
+      }
     };
 
     const handleRefine = async () => {
@@ -442,16 +489,27 @@ export function PromptForge() {
 
           const systemInstruction = `You are an expert prompt editor. Modify the provided prompt strictly according to the user's instruction. Return ONLY the updated prompt text. Do not include markdown formatting like \`\`\`markdown unless it is part of the prompt itself. Do not include explanations.`;
 
-          const response = await ai.models.generateContent({
-            model: model,
-            contents: `Original Prompt:\n${generatedPrompt}\n\nInstruction:\n${refineInstruction}`,
-            config: {
-              systemInstruction,
-              temperature: 0.4,
-            },
-          });
+          const maxRetries = 3;
+          let response;
+          for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+              response = await ai.models.generateContent({
+                model: model,
+                contents: `Original Prompt:\n${generatedPrompt}\n\nInstruction:\n${refineInstruction}`,
+                config: {
+                  systemInstruction,
+                  temperature: 0.4,
+                },
+              });
+              break;
+            } catch (err: any) {
+              const isRetryable = err?.status === 503 || err?.status === 429;
+              if (!isRetryable || attempt === maxRetries - 1) throw err;
+              await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+            }
+          }
 
-          if (response.text) {
+          if (response?.text) {
             const newPrompt = response.text.trim();
             setGeneratedPrompt(newPrompt);
 
@@ -477,7 +535,12 @@ export function PromptForge() {
           }
         } catch (err: any) {
           console.error("Error refining prompt:", err);
-          setError("An error occurred while refining the prompt.");
+          const message = err?.status === 503
+            ? "The service is temporarily unavailable. Please try again in a moment."
+            : err?.status === 429
+            ? "API quota exceeded. Please check your Gemini API key and billing, or try a different model."
+            : "An error occurred while refining the prompt.";
+          setError(message);
         } finally {
           setIsRefining(false);
         }

@@ -13,7 +13,7 @@ export default function Home() {
     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
   </div>
 
-  <nav className="relative z-10 flex items-center justify-between px-8 max-w-[1400px] mx-auto">
+  <nav className="relative z-10 flex items-center justify-between px-8 max-w- mx-auto">
     <div className="flex items-center gap-3">
       <div className="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center bg-zinc-900/50">
       <Sparkles className="w-4 h-4 text-zinc-300" />
@@ -29,7 +29,7 @@ export default function Home() {
     </div>
   </nav>
 
-  <section className="relative z-10 pt-32 pb-40 px-8 max-w-[1400px] mx-auto flex flex-col items-center text-center">
+  <section className="relative z-10 pt-32 pb-40 px-8 max-w-350 mx-auto flex flex-col items-center text-center">
     <motion.div 
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -79,7 +79,7 @@ export default function Home() {
   </section>
 
    <section id="features" className="relative z-10 py-32 px-8 border-t border-zinc-900/50 bg-[#050505]">
-    <div className="max-w-[1400px] mx-auto">
+    <div className="max-w-350 mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
             <div className="max-w-2xl">
               <h2 className="text-4xl md:text-6xl font-medium tracking-tighter text-white mb-6 leading-[0.9]">
@@ -131,7 +131,7 @@ export default function Home() {
 
    </div>
    </section>
-    <footer className="relative z-10 py-12 px-8 border-t border-zinc-900/50 flex flex-col md:flex-row items-center justify-between max-w-[1400px] mx-auto">
+    <footer className="relative z-10 py-12 px-8 border-t border-zinc-900/50 flex flex-col md:flex-row items-center justify-between max-w-350 mx-auto">
         <div className="flex items-center gap-3 mb-4 md:mb-0">
           <div className="w-6 h-6 rounded-full border border-zinc-800 flex items-center justify-center bg-zinc-900/50">
             <Sparkles className="w-3 h-3 text-zinc-500" />
