@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { Terminal, Copy, Check, Sparkles, Wand2, Download, Loader2, X, ChevronDown } from "lucide-react";
+import { Terminal, Copy, Check, Sparkles, Wand2, Download, Loader2, X, ChevronDown, Settings } from "lucide-react";
 
 interface Category {
   id: string;
@@ -38,7 +38,9 @@ interface ForgeGeneratorProps {
   handleRefine: () => Promise<void>;
   handleExport: () => void;
   handleSmartEnhance: () => Promise<void>;
-  handleSaveTemplate: () => Promise<void>;
+  handleSaveTemplate: () => void;
+  onOpenSettings: () => void;
+  hasCustomKey: boolean;
   categories: Category[];
   models: Model[];
 }
@@ -66,6 +68,8 @@ export function ForgeGenerator({
   handleExport,
   handleSmartEnhance,
   handleSaveTemplate,
+  onOpenSettings,
+  hasCustomKey,
   categories,
   models
 }: ForgeGeneratorProps) {
@@ -90,13 +94,25 @@ export function ForgeGenerator({
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Intent</label>
-                  <button
-                    onClick={handleSaveTemplate}
-                    disabled={!description.trim()}
-                    className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 hover:text-indigo-300 transition-colors"
-                  >
-                    Save Template
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5" title={hasCustomKey ? "Custom API key active" : "Using default API key"}>
+                      <div className={`w-2 h-2 rounded-full ${hasCustomKey ? "bg-green-400" : "bg-zinc-600"}`} />
+                      <span className="text-[10px] text-zinc-600">{hasCustomKey ? "Custom" : "Default"}</span>
+                    </div>
+                    <button
+                      onClick={onOpenSettings}
+                      className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                      Settings
+                    </button>
+                    <button
+                      onClick={handleSaveTemplate}
+                      disabled={!description.trim()}
+                      className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50"
+                    >
+                      Save Template
+                    </button>
+                  </div>
                 </div>
                 <div className="relative">
                   <textarea

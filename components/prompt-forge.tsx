@@ -15,6 +15,7 @@ import { VersionsModal } from "@/components/versions-modal";
 import { GalleryModal } from "@/components/gallery-modal";
 import { EvaluationModal } from "@/components/evaluation-modal";
 import { FeedbackModal } from "@/components/feedback-modal";
+import { SettingsModal } from "@/components/settings-modal";
 
 interface EvaluationData {
   rating: number;
@@ -23,7 +24,7 @@ interface EvaluationData {
     specificity: number;
     misinterpretationRisk: number;
   };
-  strength: string[];
+  strengths: string[];
   weaknesses: string[];
   suggestions: string[];
 }
@@ -129,6 +130,42 @@ export function PromptForge() {
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isAutoFixing, setIsAutoFixing] = useState(false);
 
+  // Settings state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [userApiKey, setUserApiKey] = useState<string | null>(null);
+
+  // Load user API key from localStorage
+  useEffect(() => {
+    const savedKey = localStorage.getItem("promptforge_api_key");
+    if (savedKey) setUserApiKey(savedKey);
+  }, []);
+
+  // Persist user API key
+  const handleSaveApiKey = async (key: string): Promise<boolean> => {
+    try {
+      const ai = new GoogleGenAI({ apiKey: key });
+      await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: "Reply with only the word OK.",
+        config: { temperature: 0 },
+      });
+      setUserApiKey(key);
+      localStorage.setItem("promptforge_api_key", key);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleClearApiKey = () => {
+    setUserApiKey(null);
+    localStorage.removeItem("promptforge_api_key");
+  };
+
+  const getApiKey = (): string | undefined => {
+    return userApiKey || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  };
+
   const showToast = (message: string, type: 'success' | 'info' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -175,7 +212,7 @@ export function PromptForge() {
       if (!description.trim()) return;
       setIsEnhancing(true);
       try {
-        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const apiKey = getApiKey();
         if (!apiKey) throw new Error("API key missing");
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
@@ -202,7 +239,7 @@ export function PromptForge() {
       if (!generatedPrompt || !evaluationResult) return;
       setIsAutoFixing(true);
       try {
-        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const apiKey = getApiKey();
         if (!apiKey) throw new Error("API key missing");
         const ai = new GoogleGenAI({ apiKey });
 
@@ -265,9 +302,9 @@ export function PromptForge() {
       setGeneratedPrompt("");
 
       try {
-        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const apiKey = getApiKey();
         if (!apiKey) {
-          throw new Error("Gemini API key is missing. Please configure it in the environment variables.");
+          throw new Error("Gemini API key is missing. Click Settings to add your own API key.");
         }
 
         const ai = new GoogleGenAI({ apiKey });
@@ -395,7 +432,7 @@ export function PromptForge() {
       setIsEvaluationOpen(true);
 
       try {
-        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const apiKey = getApiKey();
         if (!apiKey) {
           throw new Error("Gemini API key is missing.");
         }
@@ -480,7 +517,7 @@ export function PromptForge() {
         setIsRefining(true);
 
         try {
-          const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+          const apiKey = getApiKey();
           if (!apiKey) {
             throw new Error("Gemini API key is missing.");
           }
@@ -661,6 +698,8 @@ export function PromptForge() {
              handleExport={handleExport}
              handleSmartEnhance={handleSmartEnhance}
              handleSaveTemplate={handleSaveTemplate}
+             onOpenSettings={() => setIsSettingsOpen(true)}
+             hasCustomKey={userApiKey !== null}
              categories={CATEGORIES}
              models={MODELS}
            />
@@ -724,6 +763,14 @@ export function PromptForge() {
              feedbackComment={feedbackComment}
              setFeedbackComment={setFeedbackComment}
              handleFeedbackSubmit={handleFeedbackSubmit}
+           />
+
+           <SettingsModal
+             isOpen={isSettingsOpen}
+             onClose={() => setIsSettingsOpen(false)}
+             onSaveKey={handleSaveApiKey}
+             onClearKey={handleClearApiKey}
+             hasCustomKey={userApiKey !== null}
            />
 
            <ForgeToast toast={toast} onClose={() => setToast(null)} />
