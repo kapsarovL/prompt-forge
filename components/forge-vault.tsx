@@ -11,10 +11,12 @@ interface PromptHistory {
   timestamp: number;
 }
 
+import type { LucideIcon } from "lucide-react";
+
 interface Category {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   description: string;
 }
 
@@ -65,12 +67,15 @@ export function ForgeVault({
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+              <label htmlFor="history-search" className="sr-only">Search history</label>
               <input
+                id="history-search"
+                name="history-search"
                 type="text"
                 placeholder="Search history..."
                 value={historySearch}
                 onChange={e => setHistorySearch(e.target.value)}
-                className="bg-zinc-900/50 border border-white/5 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 w-64"
+                className="bg-zinc-900/50 border border-white/5 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 w-64"
               />
             </div>
             <button
@@ -90,14 +95,14 @@ export function ForgeVault({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredHistory.slice(0, visibleHistoryCount).map((item) => (
-              <div key={item.id} className="p-6 bg-zinc-900/30 border border-white/5 rounded-2xl hover:border-white/10 transition-all group">
+              <div key={item.id} className="p-6 bg-zinc-900/30 border border-white/5 rounded-2xl hover:border-white/10 transition-all">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex gap-2">
                     <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 bg-white/5 text-zinc-500 rounded-md">
                       {categories.find(c => c.id === item.category)?.label || item.category}
                     </span>
-                    <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 bg-indigo-500/10 text-indigo-400 rounded-md">
-                      {item.model.split('-')[1]}
+                    <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 bg-amber-500/10 text-amber-400 rounded-md">
+                      {item.model.split('-')[1] || item.model}
                     </span>
                   </div>
                   <span className="text-[10px] text-zinc-700 font-mono">
@@ -108,15 +113,15 @@ export function ForgeVault({
                   {item.description}
                 </p>
                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                  <button onClick={() => handleRecall(item)} className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+                  <button onClick={() => handleRecall(item)} className="text-[10px] font-bold tracking-widest uppercase text-amber-400 hover:text-amber-300 flex items-center gap-2">
                     Recall <ArrowRight className="w-3 h-3" />
                   </button>
-                  <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => {
-                      navigator.clipboard.writeText(item.prompt);
+                  <div className="flex gap-3 opacity-40 hover:opacity-100 transition-opacity">
+                    <button aria-label="Copy prompt" onClick={() => {
+                      navigator.clipboard.writeText(item.prompt).catch(() => showToast("Copy failed"));
                       showToast("Copied!");
                     }} className="text-zinc-600 hover:text-zinc-300"><Copy className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => handleDeleteHistory(item.id)} className="text-zinc-600 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button aria-label="Delete item" onClick={() => handleDeleteHistory(item.id)} className="text-zinc-600 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
               </div>

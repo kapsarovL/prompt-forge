@@ -29,7 +29,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
         if (this.state.hasError) {
             const errorMessage = this.state.error?.message ?? "Unknown error";
             return (
-                <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+                <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4" role="alert">
                     <div className="bg-zinc-900 border border-red-500/20 rounded-xl p-6 max-w-lg w-full">
                         <h2 className="text-xl font-bold text-red-400 mb-4">Something went wrong</h2>
                         <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800 overflow-auto">

@@ -1,12 +1,15 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { Terminal, Copy, Check, Sparkles, Wand2, Download, Loader2, X, ChevronDown, Settings } from "lucide-react";
+import { Terminal, Copy, Check, Sparkles, Wand2, Download, Loader2, X, ChevronDown, Bot, Cpu, History, AlertTriangle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { Provider } from "@/lib/types";
+import { OutputPanelSkeleton } from "@/components/forge-skeleton";
 
 interface Category {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   description: string;
 }
 
@@ -41,8 +44,14 @@ interface ForgeGeneratorProps {
   handleSaveTemplate: () => void;
   onOpenSettings: () => void;
   hasCustomKey: boolean;
+  hasApiKey: boolean;
   categories: Category[];
   models: Model[];
+  provider: Provider;
+  setProvider: (p: Provider) => void;
+  opencodeModel: string;
+  onSetOpencodeModel: (model: string) => void;
+  onOpenVersions: () => void;
 }
 
 export function ForgeGenerator({
@@ -70,8 +79,14 @@ export function ForgeGenerator({
   handleSaveTemplate,
   onOpenSettings,
   hasCustomKey,
+  hasApiKey,
   categories,
-  models
+  models,
+  provider,
+  setProvider,
+  opencodeModel,
+  onSetOpencodeModel,
+  onOpenVersions
 }: ForgeGeneratorProps) {
   return (
     <section id="generator" className="py-24 px-6 relative">
@@ -89,11 +104,24 @@ export function ForgeGenerator({
               <p className="text-zinc-500 font-light">Configure your parameters and generate.</p>
             </div>
 
-            <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-8 space-y-8">
+            {!hasApiKey && (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+                <p className="text-sm text-amber-300/90">
+                  No API key configured.{" "}
+                  <button onClick={onOpenSettings} className="underline text-amber-200 hover:text-amber-100 font-medium">
+                    Open Settings
+                  </button>{" "}
+                  to add your key.
+                </p>
+              </div>
+            )}
+            <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-8 space-y-8 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.04] to-transparent pointer-events-none rounded-3xl" />
               {/* Description Input */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Intent</label>
+                  <label htmlFor="intent" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Intent</label>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5" title={hasCustomKey ? "Custom API key active" : "Using default API key"}>
                       <div className={`w-2 h-2 rounded-full ${hasCustomKey ? "bg-green-400" : "bg-zinc-600"}`} />
@@ -108,24 +136,32 @@ export function ForgeGenerator({
                     <button
                       onClick={handleSaveTemplate}
                       disabled={!description.trim()}
-                      className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50"
+                      className="text-[10px] font-bold tracking-widest uppercase text-amber-400 hover:text-amber-300 transition-colors disabled:opacity-50"
                     >
                       Save Template
                     </button>
                   </div>
                 </div>
                 <div className="relative">
-                  <textarea
+                    <textarea
+                    id="intent"
+                    name="intent"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        handleGenerate();
+                      }
+                    }}
                     placeholder="What are we building today?"
-                    className="w-full h-48 bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 transition-all resize-none font-light leading-relaxed"
+                    className="w-full h-48 bg-black/40 border border-white/10 rounded-xl p-5 text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 focus:shadow-[0_0_24px_-10px_rgba(245,158,11,0.35)] transition-all resize-none font-light leading-relaxed"
                   />
                   <div className="absolute bottom-4 right-4 flex gap-2">
                     <button
                       onClick={handleSmartEnhance}
                       disabled={isEnhancing || !description.trim()}
-                      className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl hover:bg-indigo-500/20 transition-all disabled:opacity-50"
+                      className="p-2 bg-amber-500/10 text-amber-400 rounded-xl hover:bg-amber-500/20 transition-all disabled:opacity-50"
                       title="Smart Enhance"
                     >
                       {isEnhancing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
@@ -143,15 +179,15 @@ export function ForgeGenerator({
 
               {/* Category Selection */}
               <div className="space-y-4">
-                <label className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Category</label>
+                <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Category</span>
                 <div className="grid grid-cols-2 gap-2">
                   {categories.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => setCategory(cat.id)}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all hover:scale-[1.02] active:scale-95 ${
                         category === cat.id
-                          ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300"
+                          ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
                           : "bg-black/20 border-white/5 text-zinc-500 hover:border-white/10"
                       }`}
                     >
@@ -162,14 +198,49 @@ export function ForgeGenerator({
                 </div>
               </div>
 
+              {/* Provider Toggle */}
+              <div className="space-y-4">
+                <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Provider</span>
+                <div className="flex p-1 bg-black/40 border border-white/10 rounded-xl">
+                  <button
+                    onClick={() => setProvider("gemini")}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                      provider === "gemini"
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    <Cpu className="w-4 h-4" />
+                    Gemini
+                  </button>
+                  <button
+                    onClick={() => setProvider("opencode")}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                      provider === "opencode"
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    <Bot className="w-4 h-4" />
+                    OpenCode
+                  </button>
+                </div>
+              </div>
+
               {/* Model Selection */}
               <div className="space-y-4">
-                <label className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Model</label>
+                <label htmlFor="model" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Model</label>
                 <div className="relative">
                   <select
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-zinc-300 appearance-none focus:outline-none focus:border-indigo-500/50"
+                    id="model"
+                    name="model"
+                    value={provider === "opencode" ? opencodeModel : model}
+                    onChange={(e) =>
+                      provider === "opencode"
+                        ? onSetOpencodeModel(e.target.value)
+                        : setModel(e.target.value)
+                    }
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-zinc-300 appearance-none focus:outline-none focus:border-amber-500/50"
                   >
                     {models.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                   </select>
@@ -179,8 +250,9 @@ export function ForgeGenerator({
 
               <button
                 onClick={handleGenerate}
-                disabled={!description.trim() || isGenerating}
-                className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 disabled:bg-zinc-800 flex items-center justify-center gap-2"
+                disabled={!description.trim() || isGenerating || !hasApiKey}
+                title={!hasApiKey ? "No API key configured. Open Settings to add one." : undefined}
+                className="w-full py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-2xl shadow-[0_0_24px_-6px_rgba(245,158,11,0.15)] hover:shadow-[0_0_32px_-4px_rgba(245,158,11,0.35)] hover:from-amber-500 hover:to-orange-600 transition-all active:scale-[0.97] disabled:opacity-50 disabled:shadow-none disabled:bg-zinc-800 disabled:from-zinc-800 disabled:to-zinc-800 flex items-center justify-center gap-2"
               >
                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                 {isGenerating ? "Forging..." : "Generate Prompt"}
@@ -195,7 +267,9 @@ export function ForgeGenerator({
             viewport={{ once: true }}
             className="lg:w-7/12 flex flex-col"
           >
-            <div className="bg-zinc-900/50 border border-white/5 rounded-3xl flex flex-col h-full min-h-150px overflow-hidden">
+            <div className="bg-zinc-900/50 border border-white/5 rounded-3xl flex flex-col h-full min-h-[150px] overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-tl from-purple-500/[0.03] to-transparent pointer-events-none rounded-3xl" />
+              <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-50" />
               <div className="px-8 py-4 border-b border-white/5 flex items-center justify-between bg-black/20">
                 <div className="flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-zinc-600" />
@@ -208,7 +282,7 @@ export function ForgeGenerator({
                       <button onClick={handleCopy} className="p-2 hover:bg-white/5 rounded-lg transition-colors" title="Copy">
                         {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-zinc-500" />}
                       </button>
-                      <button onClick={handleEvaluate} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-indigo-400" title="Evaluate">
+                      <button onClick={handleEvaluate} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-amber-400" title="Evaluate">
                         <Sparkles className="w-4 h-4" />
                       </button>
                       <button onClick={() => setShowRefineInput(!showRefineInput)} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-500" title="Refine">
@@ -216,6 +290,9 @@ export function ForgeGenerator({
                       </button>
                       <button onClick={handleExport} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-500" title="Export">
                         <Download className="w-4 h-4" />
+                      </button>
+                      <button onClick={onOpenVersions} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-500" title="Versions">
+                        <History className="w-4 h-4" />
                       </button>
                     </>
                   )}
@@ -228,17 +305,20 @@ export function ForgeGenerator({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="px-8 py-4 border-b border-white/5 bg-indigo-500/5"
+                    className="px-8 py-4 border-b border-white/5 bg-amber-500/5 refine-bar"
                   >
                     <div className="flex gap-4">
+                      <label htmlFor="refine-instruction" className="sr-only">Refine instruction</label>
                       <input
+                        id="refine-instruction"
+                        name="refine-instruction"
                         type="text"
                         value={refineInstruction}
                         onChange={(e) => setRefineInstruction(e.target.value)}
                         placeholder="Refine this prompt..."
                         className="flex-1 bg-transparent border-none text-sm text-white placeholder-zinc-700 focus:outline-none"
                       />
-                      <button onClick={handleRefine} className="text-xs font-bold text-indigo-400 hover:text-indigo-300">Apply</button>
+                      <button onClick={handleRefine} className="text-xs font-bold text-amber-400 hover:text-amber-300">Apply</button>
                     </div>
                   </motion.div>
                 )}
@@ -252,10 +332,9 @@ export function ForgeGenerator({
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 flex flex-col items-center justify-center"
+                      className="absolute inset-0"
                     >
-                      <Loader2 className="w-8 h-8 animate-spin text-indigo-500/40 mb-4" />
-                      <p className="text-xs text-zinc-600 tracking-widest uppercase font-bold">Forging...</p>
+                      <OutputPanelSkeleton />
                     </motion.div>
                   ) : generatedPrompt ? (
                     <motion.div
@@ -264,16 +343,24 @@ export function ForgeGenerator({
                       animate={{ opacity: 1 }}
                       className="h-full"
                     >
-                      <textarea
-                        readOnly
-                        value={generatedPrompt}
-                        className="w-full h-full bg-transparent text-zinc-300 font-mono text-sm leading-relaxed resize-none focus:outline-none"
-                      />
+                      <label htmlFor="output" className="sr-only">Generated prompt output</label>
+                        <textarea
+                          id="output"
+                          name="output"
+                          readOnly
+                          value={generatedPrompt}
+                          aria-describedby="output-description"
+                          className="w-full h-full bg-transparent text-zinc-300 font-mono text-sm leading-relaxed resize-none focus:outline-none line-numbers"
+                        />
+                        <span id="output-description" className="sr-only">Generated prompt ready for copy or export</span>
                     </motion.div>
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-25">
                       <Terminal className="w-16 h-16 text-zinc-500 mb-4" />
-                      <p className="text-xs tracking-widest uppercase font-bold">Awaiting Input</p>
+                      <p className="text-xs tracking-widest uppercase font-bold">
+                        <span>Awaiting Input</span>
+                        <span className="cursor-blink" />
+                      </p>
                     </div>
                   )}
                 </AnimatePresence>

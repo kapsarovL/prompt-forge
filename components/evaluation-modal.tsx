@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import { X, BarChart, Loader2, AlertTriangle, CheckCircle2, Lightbulb, Zap } from "lucide-react";
+import { EvaluationSkeleton } from "@/components/forge-skeleton";
+import { useModal } from "@/hooks/use-modal";
 
 interface EvaluationData {
   rating: number;
@@ -34,10 +36,11 @@ export function EvaluationModal({
   handleAutoFix,
   isAutoFixing
 }: EvaluationModalProps) {
+  const { handleBackdropClick } = useModal(onClose);
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl" role="dialog" aria-modal="true" aria-label="Prompt evaluation" onClick={handleBackdropClick}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -46,8 +49,8 @@ export function EvaluationModal({
           >
             <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-black/20 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-500/10 rounded-2xl flex items-center justify-center">
-                  <BarChart className="w-5 h-5 text-indigo-400" />
+                <div className="w-10 h-10 bg-amber-500/10 rounded-2xl flex items-center justify-center">
+                  <BarChart className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Prompt Evaluation</h3>
@@ -55,6 +58,7 @@ export function EvaluationModal({
                 </div>
               </div>
               <button
+                aria-label="Close evaluation"
                 onClick={onClose}
                 className="p-2 hover:bg-white/5 rounded-xl transition-colors text-zinc-500 hover:text-white"
               >
@@ -64,10 +68,7 @@ export function EvaluationModal({
 
             <div className="p-8 overflow-y-auto flex-1 space-y-8">
               {isEvaluating ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <Loader2 className="w-12 h-12 animate-spin text-indigo-500/40 mb-6" />
-                  <p className="text-xs tracking-widest uppercase font-bold text-zinc-600">Analyzing Quality...</p>
-                </div>
+                <EvaluationSkeleton />
               ) : evaluationError ? (
                 <div className="p-6 bg-red-500/5 border border-red-500/10 rounded-3xl text-red-400 text-sm flex items-start">
                   <AlertTriangle className="w-5 h-5 mr-4 shrink-0" />
@@ -78,12 +79,17 @@ export function EvaluationModal({
                   {/* Score Overview */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="md:col-span-1 flex flex-col items-center justify-center p-6 bg-black/40 border border-white/5 rounded-3xl">
-                      <div className={`text-4xl font-bold mb-1 ${
-                        evaluationResult.rating >= 8 ? 'text-emerald-400' :
-                        evaluationResult.rating >= 5 ? 'text-amber-400' : 'text-red-400'
-                      }`}>
+                      <motion.span
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 12 }}
+                        className={`text-4xl font-bold mb-1 block ${
+                          evaluationResult.rating >= 8 ? 'text-emerald-400' :
+                          evaluationResult.rating >= 5 ? 'text-amber-400' : 'text-red-400'
+                        }`}
+                      >
                         {evaluationResult.rating}
-                      </div>
+                      </motion.span>
                       <div className="text-[10px] font-bold tracking-widest uppercase text-zinc-600">Score</div>
                     </div>
                     <div className="md:col-span-3 grid grid-cols-3 gap-4">
@@ -135,14 +141,14 @@ export function EvaluationModal({
                   {/* Suggestions */}
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 flex items-center gap-2">
+                      <h4 className="text-[10px] font-bold tracking-widest uppercase text-amber-400 flex items-center gap-2">
                         <Lightbulb className="w-4 h-4" />
                         Optimization Path
                       </h4>
                       <button
                         onClick={handleAutoFix}
                         disabled={isAutoFixing}
-                        className="px-4 py-2 bg-indigo-500 text-white text-[10px] font-bold tracking-widest uppercase rounded-xl hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                        className="px-4 py-2 bg-amber-500 text-white text-[10px] font-bold tracking-widest uppercase rounded-xl hover:bg-amber-600 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
                       >
                         {isAutoFixing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
                         Auto-Fix
@@ -150,7 +156,7 @@ export function EvaluationModal({
                     </div>
                     <div className="space-y-3">
                       {evaluationResult.suggestions.map((s, i) => (
-                        <div key={i} className="p-5 bg-indigo-500/5 border border-indigo-500/10 rounded-3xl text-sm text-zinc-300 font-light leading-relaxed">
+                        <div key={i} className="p-5 bg-amber-500/5 border border-amber-500/10 rounded-3xl text-sm text-zinc-300 font-light leading-relaxed">
                           {s}
                         </div>
                       ))}

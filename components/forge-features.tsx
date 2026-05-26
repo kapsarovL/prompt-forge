@@ -1,23 +1,19 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Wand2, Shield, Cpu } from "lucide-react";
 
 import { FeatureCard } from "./feature-card";
 
 const FEATURES = [
   {
-    icon: Wand2,
     title: "Smart Enhance",
     desc: "Turn vague descriptions into detailed context automatically."
   },
   {
-    icon: Shield,
     title: "Deep Evaluation",
     desc: "Analyze clarity, specificity, and misinterpretation risks."
   },
   {
-    icon: Cpu,
     title: "Auto-Optimization",
     desc: "One-click fixes based on AI-driven performance feedback."
   }
@@ -40,7 +36,6 @@ export function ForgeFeatures() {
                 number={`0${i + 1}`}
                 title={feature.title}
                 description={feature.desc}
-                icon={feature.icon}
               />
             </motion.div>
           ))}

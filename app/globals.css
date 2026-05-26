@@ -1,27 +1,119 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Forge accent palette */
+  --color-forge: #F59E0B;
+  --color-forge--hover: #D97706;
+  --color-forge--subtle: #FCD34D;
+
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Utility: forge loading rings */
+@utility forge-ring-1 {
+  animation: ring-pulse 2s ease-in-out infinite;
+}
+@utility forge-ring-2 {
+  animation: ring-pulse 2s ease-in-out 0.3s infinite;
+}
+@utility forge-ring-3 {
+  animation: ring-pulse 2s ease-in-out 0.6s infinite;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Dot-grid background for the output panel */
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Decorative line numbers for the output panel */
+.line-numbers {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 1.5em,
+    rgba(255, 255, 255, 0.04) 1.5em,
+    rgba(255, 255, 255, 0.04) 1.5em
+  );
+  background-size: 100% 1.5em;
+  line-height: 1.5em;
+}
+
+/* Typing cursor blink */
+.cursor-blink::after {
+  content: "|";
+  animation: blink 1s step-end infinite;
+  color: rgba(245, 158, 11, 0.5);
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Forge ring loading animation */
+@keyframes ring-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Shimmer animation for skeleton loading */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.02) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Refine bar accent */
+.refine-bar {
+  border-left: 2px solid rgba(245, 158, 11, 0.3);
+  transition: border-color 0.2s ease;
+}
+.refine-bar:focus-within {
+  border-left-color: rgba(245, 158, 11, 0.7);
+}
+
+/* Ember particle effect for forge CTA */
+@keyframes ember-float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0; }
+  20% { opacity: 0.6; }
+  80% { opacity: 0.2; }
+  50% { transform: translateY(-20px) scale(0.8); }
+}
+
+.forge-ember {
+  position: relative;
+}
+.forge-ember::before,
+.forge-ember::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.4);
+  pointer-events: none;
+}
+.forge-ember::before {
+  top: -8px;
+  left: 20%;
+  animation: ember-float 3s ease-in-out infinite;
+}
+.forge-ember::after {
+  bottom: -8px;
+  right: 25%;
+  animation: ember-float 3s ease-in-out 1.5s infinite;
 }

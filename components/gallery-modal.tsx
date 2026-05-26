@@ -2,11 +2,13 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import { X, Library, Search, ChevronDown, Trash2, Copy, ArrowRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useModal } from "@/hooks/use-modal";
 
 interface Category {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   description: string;
 }
 
@@ -45,10 +47,11 @@ export function GalleryModal({
   handleDeleteTemplate,
   showToast
 }: GalleryModalProps) {
+  const { handleBackdropClick } = useModal(onClose);
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl" role="dialog" aria-modal="true" aria-label="Template gallery" onClick={handleBackdropClick}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -57,8 +60,8 @@ export function GalleryModal({
           >
             <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-black/20 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-500/10 rounded-2xl flex items-center justify-center">
-                  <Library className="w-5 h-5 text-indigo-400" />
+                <div className="w-10 h-10 bg-amber-500/10 rounded-2xl flex items-center justify-center">
+                  <Library className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Template Gallery</h3>
@@ -66,6 +69,7 @@ export function GalleryModal({
                 </div>
               </div>
               <button
+                aria-label="Close gallery"
                 onClick={onClose}
                 className="p-2 hover:bg-white/5 rounded-xl transition-colors text-zinc-500 hover:text-white"
               >
@@ -76,19 +80,25 @@ export function GalleryModal({
             <div className="px-8 py-6 border-b border-white/5 bg-black/10 flex flex-col sm:flex-row gap-4 shrink-0">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                <label htmlFor="gallery-search" className="sr-only">Search templates</label>
                 <input
+                  id="gallery-search"
+                  name="gallery-search"
                   type="text"
                   placeholder="Search templates..."
                   value={gallerySearch}
                   onChange={e => setGallerySearch(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-all"
                 />
               </div>
               <div className="relative">
+                <label htmlFor="gallery-category" className="sr-only">Category filter</label>
                 <select
+                  id="gallery-category"
+                  name="gallery-category"
                   value={galleryCategory}
                   onChange={e => setGalleryCategory(e.target.value)}
-                  className="bg-black/40 border border-white/10 rounded-2xl pl-4 pr-10 py-3 text-sm text-zinc-400 appearance-none focus:outline-none focus:border-indigo-500/50 min-w-45px"
+                  className="bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-zinc-400 appearance-none focus:outline-none focus:border-amber-500/50 min-w-[45px]"
                 >
                   <option value="all">All Categories</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
@@ -106,7 +116,7 @@ export function GalleryModal({
                         {categories.find(c => c.id === t.category)?.label}
                       </span>
                       {t.isCustom && (
-                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 bg-indigo-500/10 text-indigo-400 rounded-md">
+                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 bg-amber-500/10 text-amber-400 rounded-md">
                           Custom
                         </span>
                       )}
@@ -116,6 +126,7 @@ export function GalleryModal({
                       <div className="flex items-center gap-3">
                         {t.isCustom && (
                           <button
+                            aria-label="Delete template"
                             onClick={(e) => handleDeleteTemplate(e, t.text, t.category)}
                             className="text-zinc-600 hover:text-red-400 transition-colors"
                           >
@@ -123,8 +134,9 @@ export function GalleryModal({
                           </button>
                         )}
                         <button
+                          aria-label="Copy template"
                           onClick={() => {
-                            navigator.clipboard.writeText(t.text);
+                            navigator.clipboard.writeText(t.text).catch(() => showToast("Copy failed"));
                             showToast("Copied!");
                           }}
                           className="text-zinc-600 hover:text-zinc-300 transition-colors"
@@ -138,7 +150,7 @@ export function GalleryModal({
                           setCategory(t.category);
                           onClose();
                         }}
-                        className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 hover:text-indigo-300 flex items-center gap-2"
+                        className="text-[10px] font-bold tracking-widest uppercase text-amber-400 hover:text-amber-300 flex items-center gap-2"
                       >
                         Use <ArrowRight className="w-3 h-3" />
                       </button>

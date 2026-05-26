@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import { X, GitCommit, History } from "lucide-react";
+import { useModal } from "@/hooks/use-modal";
 
 interface PromptVersion {
   id: string;
@@ -18,10 +19,11 @@ interface VersionsModalProps {
 }
 
 export function VersionsModal({ isOpen, onClose, versions, setGeneratedPrompt, showToast }: VersionsModalProps) {
+  const { handleBackdropClick } = useModal(onClose);
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl" role="dialog" aria-modal="true" aria-label="Prompt versions" onClick={handleBackdropClick}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -30,8 +32,8 @@ export function VersionsModal({ isOpen, onClose, versions, setGeneratedPrompt, s
           >
             <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-black/20 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-500/10 rounded-2xl flex items-center justify-center">
-                  <GitCommit className="w-5 h-5 text-indigo-400" />
+                <div className="w-10 h-10 bg-amber-500/10 rounded-2xl flex items-center justify-center">
+                  <GitCommit className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Prompt Versions</h3>
@@ -39,6 +41,7 @@ export function VersionsModal({ isOpen, onClose, versions, setGeneratedPrompt, s
                 </div>
               </div>
               <button
+                aria-label="Close versions"
                 onClick={onClose}
                 className="p-2 hover:bg-white/5 rounded-xl transition-colors text-zinc-500 hover:text-white"
               >
@@ -54,15 +57,16 @@ export function VersionsModal({ isOpen, onClose, versions, setGeneratedPrompt, s
                 </div>
               ) : (
                 versions.map((v, i) => (
-                  <div key={v.id} className="p-6 bg-black/40 border border-white/5 rounded-3xl hover:border-white/10 transition-all group">
+                  <div key={v.id} className="p-6 bg-black/40 border border-white/5 rounded-3xl hover:border-white/10 transition-all">
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-600">
                         Version {versions.length - i} • {new Date(v.timestamp).toLocaleTimeString()}
                       </span>
-                      <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-4 opacity-40 hover:opacity-100 transition-opacity">
                         <button
+                          aria-label="Copy version"
                           onClick={() => {
-                            navigator.clipboard.writeText(v.prompt);
+                            navigator.clipboard.writeText(v.prompt).catch(() => showToast("Copy failed"));
                             showToast("Copied!");
                           }}
                           className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 hover:text-white transition-colors"
@@ -70,11 +74,12 @@ export function VersionsModal({ isOpen, onClose, versions, setGeneratedPrompt, s
                           Copy
                         </button>
                         <button
+                          aria-label="Restore version"
                           onClick={() => {
                             setGeneratedPrompt(v.prompt);
                             onClose();
                           }}
-                          className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 hover:text-indigo-300 transition-colors"
+                          className="text-[10px] font-bold tracking-widest uppercase text-amber-400 hover:text-amber-300 transition-colors"
                         >
                           Restore
                         </button>
