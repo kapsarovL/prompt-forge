@@ -10,7 +10,7 @@ export default function Home() {
   <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
     <div className="absolute top-[-20%] left-[-10%] h-[60%] w-[60%] rounded-full bg-amber-600/10 blur-[120px]" />
     <div className="absolute bottom-[-20%] right-[-10%] h-[60%] w-[60%] rounded-full bg-orange-600/10 blur-[120px]" />
-    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+    <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay" />
   </div>
 
   <nav className="relative z-10 flex items-center justify-between px-8 max-w-7xl mx-auto">
