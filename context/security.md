@@ -49,7 +49,7 @@ API keys and prompts are sent directly from the browser to AI provider APIs over
 | API keys never committed to git | `.env.local` in `.gitignore`; `.env.example` documents the key name only |
 | User supplies their own keys | Settings modal with per-provider key management |
 | Environmental fallback | `NEXT_PUBLIC_GEMINI_API_KEY` env var for development convenience |
-| Keys stored in localStorage | Plaintext in `promptforge_api_key` and `promptforge_opencode_api_key` |
+| Keys stored in localStorage | Plaintext in `promptforge_api_key`, `pf_anthropic_key`, `pf_codex_key`, `promptforge_opencode_api_key` |
 | No default/shared API keys shipped | The hardcoded Gemini key was revoked in a prior session and never committed |
 
 ### Data Protection

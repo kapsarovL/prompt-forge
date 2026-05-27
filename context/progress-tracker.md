@@ -115,9 +115,23 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - None currently
 
 ## Next Steps
-- Monitor for any regression after the 9-phase sweep + landing overhaul + forge polish
+- Monitor for any regression after the 9-phase sweep + landing overhaul + forge polish + open-source readiness
 - Consider adding memory-safe `AbortController` to Gemini SDK calls (library doesn't expose signal)
 - Evaluate if `showToast` prop types should be broadened to `(message: string, type?: 'success' | 'info') => void` in child components
 
 ## Recent
-- (see Phase 1-9 above + Landing Page Overhaul + Forge Page Polish)
+
+### Open-Source Readiness (May 2026)
+- [x] `package.json` — added description, license (MIT), author, keywords, bugs/homepage URLs
+- [x] `.env.example` — restored and added to `.gitignore` exception
+- [x] `README.md` — overhauled with forge logo SVG hero, filled all feature `<details>` blocks, added Anthropic + Codex to tech stack/provider config/data persistence tables, fixed Next.js version badges, fixed CI badge URL to `kapsarovL`
+- [x] `SECURITY.md` — added project-level security policy
+- [x] `CONTRIBUTING.md` — added contribution guide
+- [x] GitHub templates — added bug report + feature request issue templates, PR template
+- [x] `CODE_OF_CONDUCT.md` — added
+- [x] GitHub repo metadata — topics set via CI workflow trigger
+- [x] CI — fixed Node.js to v22 for pnpm 11 compatibility
+- [x] `.pnpmfile.cjs` — added for transitive dep overrides (postcss >=8.5.10, ws >=8.20.1)
+- [x] Security patches — Next.js 16.2.3 → 16.2.5 → 16.2.6, postcss override, ws override
+- [x] `engines.node` — pinned to `22.x` to suppress Vercel auto-upgrade warning
+- [x] Context docs sync — updated `project-overview.md`, `architecture.md`, `code-standards.md`, `security.md` for Anthropic/Codex multi-provider state

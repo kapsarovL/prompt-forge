@@ -138,9 +138,11 @@ try {
 ## API Client Standards
 
 - **Gemini**: Use `@google/genai` SDK with `generateWithRetry` wrapper
+- **Anthropic**: Use `@anthropic-ai/sdk` SDK with `anthropicGenerateWithRetry` wrapper
 - **OpenCode**: Use raw `fetch` with `openCodeGenerateWithRetry` wrapper
-- Both implement: 3 retries, exponential backoff (1s, 2s, 4s), status-specific retry triggers
-- Structured output: Gemini uses `Type.VOICE` for evaluation; OpenCode expects raw JSON string
+- **Codex**: Use raw `fetch` with `codexGenerateWithRetry` wrapper
+- All implement: 3 retries, exponential backoff (1s, 2s, 4s), status-specific retry triggers
+- Structured output: Gemini uses `Type.VOICE` for evaluation; Anthropic/OpenCode/Codex expect raw JSON string
 - New providers should follow the same pattern: a `lib/{provider}.ts` file + handler branching in `PromptForge`
 
 ## Naming Conventions
@@ -155,7 +157,7 @@ try {
 | Constants | UPPER_SNAKE | `CATEGORIES`, `OPENCODE_DEFAULT_BASE_URL` |
 | Types | PascalCase | `EvaluationData`, `PromptHistory` |
 | Props interface | `Props` | `Props` (near export) |
-| localStorage keys | `promptforge_` prefixed snake_case | `promptforge_api_key` |
+| localStorage keys | `promptforge_` or `pf_` prefixed snake_case | `promptforge_api_key`, `pf_anthropic_key` |
 
 ## File Size Guidelines
 

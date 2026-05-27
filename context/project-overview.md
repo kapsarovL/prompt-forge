@@ -7,7 +7,7 @@ PromptForge is a **client-side AI prompt engineering tool** that helps users cra
 ## Goals
 
 1. **Provide a dedicated prompt engineering workspace** — a focused environment for iterating on prompt quality, distinct from generic chat interfaces
-2. **Support multiple AI providers interchangeably** — initially Gemini and OpenCode, designed to accept additional providers
+2. **Support multiple AI providers interchangeably** — Gemini, Anthropic Claude, OpenCode, and OpenAI Codex
 3. **Enable prompt quality measurement** — automated evaluation with structured criteria (clarity, specificity, misinterpretation risk)
 4. **Preserve prompt history** — automatic version tracking, recallable history, and user-saved templates
 5. **Remain zero-backend** — all data persists client-side via localStorage; no user accounts, no servers, no database
@@ -33,7 +33,7 @@ PromptForge is a **client-side AI prompt engineering tool** that helps users cra
 
 ### Core
 
-- **Prompt Generation** — converts natural language intent into structured LLM prompts using Gemini or OpenCode
+- **Prompt Generation** — converts natural language intent into structured LLM prompts using Gemini, Anthropic Claude, OpenCode, or OpenAI Codex
 - **Smart Enhance** — one-click improvement of the intent description before generation
 - **Refinement** — iterative prompt polishing with natural language instructions
 
@@ -51,8 +51,8 @@ PromptForge is a **client-side AI prompt engineering tool** that helps users cra
 
 ### Configuration
 
-- **Dual-Provider Settings** — independent API key management for Gemini and OpenCode
-- **Model Selection** — per-provider model dropdown
+- **Multi-Provider Settings** — independent API key management for Gemini, Anthropic Claude, OpenCode, and OpenAI Codex
+- **Model Selection** — per-provider model dropdown with provider-appropriate choices
 - **OpenCode Base URL** — configurable endpoint for self-hosted or alternate OpenCode API targets
 
 ### Out of Scope (v1)
@@ -96,7 +96,9 @@ PromptForge is a **client-side AI prompt engineering tool** that helps users cra
 | Animations | Motion (Framer Motion) 12.38.0 |
 | Icons | Lucide React 0.577.0 |
 | AI Gemini | @google/genai 1.46.0 (SDK) |
+| AI Anthropic | @anthropic-ai/sdk 0.49.0 (SDK) |
 | AI OpenCode | Raw fetch (OpenAI-compatible API) |
+| AI Codex | Raw fetch (OpenAI-compatible API) |
 | Persistence | Web localStorage API |
 | Package Manager | pnpm |
 | CI | GitHub Actions (lint + build) |

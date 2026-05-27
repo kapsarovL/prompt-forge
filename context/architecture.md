@@ -4,7 +4,7 @@
 
 ### Overview
 
-PromptForge is a **client-side only** Next.js 16 application (React 19) with zero backend. All logic runs in the browser. AI providers (Gemini, OpenCode) are called directly from the client via their APIs — no proxy server.
+PromptForge is a **client-side only** Next.js 16 application (React 19) with zero backend. All logic runs in the browser. AI providers (Gemini, Anthropic Claude, OpenCode, OpenAI Codex) are called directly from the client via their APIs — no proxy server.
 
 ```bash
 
@@ -35,8 +35,10 @@ PromptForge is a **client-side only** Next.js 16 application (React 19) with zer
 │  ┌──────────────────────────────────────────────────┐│
 │  │        AI Providers (direct client calls)          ││
 │  │                                                    ││
-│  │  Gemini ─── @google/genai SDK ───► api.google.com  ││
-│  │  OpenCode ── fetch() ────────────► user's base URL ││
+│  │  Gemini ─── @google/genai SDK ────► api.google.com         ││
+│  │  Anthropic ─ @anthropic-ai/sdk ───► api.anthropic.com      ││
+│  │  OpenCode ── fetch() ─────────────► user's base URL        ││
+│  │  Codex ───── fetch() ─────────────► api.openai.com         ││
 │  └──────────────────────────────────────────────────┘│
 │                                                      │
 └─────────────────────────────────────────────────────┘
@@ -110,16 +112,20 @@ RootLayout (app/layout.tsx)
 
 ## Storage Model
 
-### localStorage Keys (9 total)
+### localStorage Keys (13 total)
 
 | Key | Type | Purpose |
 
 |-----|------|---------|
 | `promptforge_api_key` | `string` | Gemini API key |
+| `pf_anthropic_key` | `string` | Anthropic API key |
+| `pf_anthropic_model` | `string` | Anthropic model ID |
+| `pf_codex_key` | `string` | Codex API key |
+| `pf_codex_model` | `string` | Codex model ID |
 | `promptforge_opencode_api_key` | `string` | OpenCode API key |
 | `promptforge_opencode_model` | `string` | OpenCode model ID |
 | `promptforge_opencode_base_url` | `string` | OpenCode base URL |
-| `promptforge_provider` | `"gemini" \| "opencode"` | Active provider |
+| `promptforge_provider` | `"gemini" \| "opencode" \| "anthropic" \| "codex"` | Active provider |
 | `promptforge_history` | `PromptHistory[]` | Generation history (max 50) |
 | `promptforge_custom_templates` | `Record<string, string[]>` | User-saved templates |
 | `promptforge_versions` | `PromptVersion[]` | Version history (max 20) |
@@ -146,7 +152,7 @@ UI state:          showRefineInput, copied
 History:           history, historySearch, visibleHistoryCount
 Versions:          versions
 Templates:         customTemplates
-Provider:          provider, userApiKey, opencodeKey, opencodeModel, opencodeBaseUrl
+Provider:          provider, userApiKey, anthropicKey, anthropicModel, codexKey, codexModel, opencodeKey, opencodeModel, opencodeBaseUrl
 Modal visibility:  isGalleryOpen, isVersionsOpen, isEvaluationOpen, isFeedbackOpen, isSettingsOpen
 Modal form:        gallerySearch, galleryCategory, evaluationResult, evaluationError,
                    feedbackRating, feedbackComment, feedbackSubmitted
@@ -284,11 +290,14 @@ Persistence: promptforge_custom_templates
 
 ```bash
 Components: SettingsModal
-State:      provider, userApiKey, opencodeKey, opencodeModel, opencodeBaseUrl
+State:      provider, userApiKey, anthropicKey, anthropicModel,
+            codexKey, codexModel, opencodeKey, opencodeModel, opencodeBaseUrl
 Handlers:   handleSaveGeminiKey, handleClearGeminiKey,
+            handleSaveAnthropicKey, handleClearAnthropicKey, handleSetAnthropicModel,
+            handleSaveCodexKey, handleClearCodexKey, handleSetCodexModel,
             handleSaveOpenCodeKey, handleClearOpenCodeKey,
             handleSetOpencodeModel, handleSetOpencodeBaseUrl
-Persistence: All promptforge_* provider keys
+Persistence: All promptforge_* / pf_* provider keys
 ```
 
 #### 10. Feedback
@@ -348,11 +357,13 @@ prompt-forge/
 │   └── error-boundary.tsx   — Error boundary
 ├── lib/
 │   ├── types.ts             — Types, constants (Provider, CATEGORIES, MODELS, etc.)
-│   ├── gemini.ts            — Gemini API client (retry, helpers)
-│   ├── opencode.ts          — OpenCode API client (fetch, retry, helpers)
+│   ├── gemini.ts            — Gemini API client (SDK, retry, helpers)
+│   ├── anthropic.ts         — Anthropic API client (SDK, retry, helpers)
+│   ├── codex.ts             — Codex API client (fetch-based, retry, helpers)
+│   ├── opencode.ts          — OpenCode API client (fetch-based, retry, helpers)
 │   └── utils.ts             — cn() utility (clsx + tailwind-merge)
 ├── hooks/
-│   └── use-mobile.ts        — Mobile detection hook (unused)
+│   └── use-modal.ts         — Modal hook (Escape, backdrop, focus restore)
 └── context/                 — Architecture context files (this directory)
 ```
 
