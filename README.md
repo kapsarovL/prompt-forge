@@ -98,7 +98,7 @@
   <img src="https://img.shields.io/badge/Next.js-16.2.3-000?logo=next.js&logoColor=white" alt="Next.js 16"/>
   <img src="https://img.shields.io/badge/React-19.2.4-61DAFB?logo=react&logoColor=white" alt="React 19"/>
   <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/node-%3E%3D20-green?logo=node.js&logoColor=white" alt="Node >=20"/>
+  <img src="https://img.shields.io/badge/node-%3E%3D22-green?logo=node.js&logoColor=white" alt="Node >=22"/>
   <img src="https://img.shields.io/badge/pnpm-latest-F69220?logo=pnpm&logoColor=white" alt="pnpm"/>
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"/>
   <br/>
@@ -185,7 +185,7 @@ Built for developers, content creators, and analysts who want precision over gue
 
 ### Prerequisites
 
-- **Node.js** >= 20
+- **Node.js** >= 22
 - **pnpm** (recommended) — install via `npm install -g pnpm`
 
 ### Quick Start
