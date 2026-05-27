@@ -234,6 +234,10 @@ pnpm start
 | `pnpm start` | `next start` | Production server |
 | `pnpm lint` | `eslint` | Run ESLint |
 | `pnpm format` | `prettier --write .` | Format all files |
+| `pnpm test` | `vitest run` | Run unit tests |
+| `pnpm test:watch` | `vitest` | Run tests in watch mode |
+| `pnpm test:e2e` | `playwright test` | Run E2E tests |
+| `pnpm coverage` | `vitest run --coverage` | Run tests with coverage report |
 
 ---
 

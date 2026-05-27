@@ -41,7 +41,7 @@ describe("BUILT_IN_TEMPLATES", () => {
   });
 
   it("has at least 1 template per category", () => {
-    for (const [key, templates] of Object.entries(BUILT_IN_TEMPLATES)) {
+    for (const [, templates] of Object.entries(BUILT_IN_TEMPLATES)) {
       expect(templates.length).toBeGreaterThan(0);
     }
   });

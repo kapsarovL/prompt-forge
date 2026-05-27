@@ -2,6 +2,8 @@ import { Type } from "@google/genai";
 import type { EvaluationData, Provider } from "@/lib/types";
 import { getApiKey, createClient, generateWithRetry } from "@/lib/gemini";
 import { getOpenCodeConfig, openCodeGenerateWithRetry, openCodeEvaluate } from "@/lib/opencode";
+import { getAnthropicKey, getAnthropicModel, generateWithAnthropic, evaluateWithAnthropic } from "@/lib/anthropic";
+import { getCodexKey, getCodexModel, generateWithCodex, evaluateWithCodex } from "@/lib/codex";
 
 export interface ApiConfig {
   provider: Provider;
@@ -12,10 +14,40 @@ export interface ApiConfig {
     model: string;
     baseUrl: string;
   } | null;
+  anthropicConfig?: {
+    apiKey: string;
+    model: string;
+  } | null;
+  codexConfig?: {
+    apiKey: string;
+    model: string;
+  } | null;
 }
 
 function resolveGeminiKey(geminiKey?: string): string | undefined {
   return geminiKey || getApiKey();
+}
+
+function resolveAnthropicConfig(
+  anthropicConfig?: ApiConfig["anthropicConfig"],
+): ApiConfig["anthropicConfig"] {
+  const key = anthropicConfig?.apiKey || getAnthropicKey();
+  if (!key) return null;
+  return {
+    apiKey: key,
+    model: anthropicConfig?.model || getAnthropicModel(),
+  };
+}
+
+function resolveCodexConfig(
+  codexConfig?: ApiConfig["codexConfig"],
+): ApiConfig["codexConfig"] {
+  const key = codexConfig?.apiKey || getCodexKey();
+  if (!key) return null;
+  return {
+    apiKey: key,
+    model: codexConfig?.model || getCodexModel(),
+  };
 }
 
 function resolveOpenCodeConfig(
@@ -42,6 +74,32 @@ export async function generatePrompt(
   category: string,
   config: ApiConfig,
 ): Promise<string> {
+  if (config.provider === "anthropic") {
+    const cfg = resolveAnthropicConfig(config.anthropicConfig);
+    if (!cfg) {
+      throw new Error("Anthropic API key is missing. Click Settings to add your API key.");
+    }
+    const text = await generateWithAnthropic(
+      cfg.apiKey,
+      SYSTEM_PROMPT,
+      [{ role: "user", content: `Category: ${category}\nDescription: ${description}` }],
+      { model: cfg.model, temperature: 0.7 },
+    );
+    return text;
+  }
+
+  if (config.provider === "codex") {
+    const cfg = resolveCodexConfig(config.codexConfig);
+    if (!cfg) throw new Error("OpenAI API key is missing. Click Settings to add your API key.");
+    const text = await generateWithCodex(
+      cfg.apiKey,
+      SYSTEM_PROMPT,
+      [{ role: "user", content: `Category: ${category}\nDescription: ${description}` }],
+      { model: cfg.model, temperature: 0.7 },
+    );
+    return text;
+  }
+
   if (config.provider === "opencode") {
     const cfg = resolveOpenCodeConfig(config.opencodeConfig);
     if (!cfg) {
@@ -74,6 +132,32 @@ export async function refinePrompt(
   config: ApiConfig,
 ): Promise<string> {
   const content = `Original Prompt:\n${originalPrompt}\n\nInstruction:\n${instruction}`;
+
+  if (config.provider === "anthropic") {
+    const cfg = resolveAnthropicConfig(config.anthropicConfig);
+    if (!cfg) throw new Error("Anthropic API key is missing.");
+
+    const text = await generateWithAnthropic(
+      cfg.apiKey,
+      "You are an expert prompt editor. Modify the provided prompt strictly according to the user's instruction. Return ONLY the updated prompt text. Do not include markdown formatting. Do not include explanations.",
+      [{ role: "user", content }],
+      { model: cfg.model, temperature: 0.4 },
+    );
+    return text;
+  }
+
+  if (config.provider === "codex") {
+    const cfg = resolveCodexConfig(config.codexConfig);
+    if (!cfg) throw new Error("OpenAI API key is missing.");
+
+    const text = await generateWithCodex(
+      cfg.apiKey,
+      "You are an expert prompt editor. Modify the provided prompt strictly according to the user's instruction. Return ONLY the updated prompt text. Do not include markdown formatting. Do not include explanations.",
+      [{ role: "user", content }],
+      { model: cfg.model, temperature: 0.4 },
+    );
+    return text;
+  }
 
   if (config.provider === "opencode") {
     const cfg = resolveOpenCodeConfig(config.opencodeConfig);
@@ -109,6 +193,32 @@ export async function smartEnhance(
   description: string,
   config: ApiConfig,
 ): Promise<string> {
+  if (config.provider === "anthropic") {
+    const cfg = resolveAnthropicConfig(config.anthropicConfig);
+    if (!cfg) throw new Error("Anthropic API key missing");
+
+    const text = await generateWithAnthropic(
+      cfg.apiKey,
+      "You are a writing assistant. Expand vague descriptions into clear, detailed instructions. Return ONLY the enhanced text.",
+      [{ role: "user", content: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${description}"` }],
+      { model: cfg.model, temperature: 0.7, maxTokens: 200 },
+    );
+    return text;
+  }
+
+  if (config.provider === "codex") {
+    const cfg = resolveCodexConfig(config.codexConfig);
+    if (!cfg) throw new Error("OpenAI API key missing");
+
+    const text = await generateWithCodex(
+      cfg.apiKey,
+      "You are a writing assistant. Expand vague descriptions into clear, detailed instructions. Return ONLY the enhanced text.",
+      [{ role: "user", content: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${description}"` }],
+      { model: cfg.model, temperature: 0.7, maxTokens: 200 },
+    );
+    return text;
+  }
+
   if (config.provider === "opencode") {
     const cfg = resolveOpenCodeConfig(config.opencodeConfig);
     if (!cfg) throw new Error("OpenCode API key missing");
@@ -153,6 +263,46 @@ export async function evaluatePrompt(
   prompt: string,
   config: ApiConfig,
 ): Promise<EvaluationData> {
+  if (config.provider === "anthropic") {
+    const cfg = resolveAnthropicConfig(config.anthropicConfig);
+    if (!cfg) throw new Error("Anthropic API key is missing.");
+
+    const raw = await evaluateWithAnthropic(
+      prompt,
+      "You are a Prompt Quality Evaluator. Analyze the provided prompt based on three key criteria: Clarity, Specificity, and Misinterpretation Risk. Return ONLY valid JSON with no markdown wrapping, no code fences, no preamble.",
+      "Provide a JSON object with these fields: rating (number 1-10), criteria (object with clarity, specificity, misinterpretationRisk, each 1-10), strengths (string array), weaknesses (string array), suggestions (string array). Return ONLY the JSON object.",
+      cfg.apiKey,
+      cfg.model,
+    );
+    if (!raw) throw new Error("Could not evaluate the prompt.");
+    const cleaned = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    try {
+      return JSON.parse(cleaned) as EvaluationData;
+    } catch {
+      throw new Error("Failed to parse evaluation results.");
+    }
+  }
+
+  if (config.provider === "codex") {
+    const cfg = resolveCodexConfig(config.codexConfig);
+    if (!cfg) throw new Error("OpenAI API key is missing.");
+
+    const raw = await evaluateWithCodex(
+      prompt,
+      "You are a Prompt Quality Evaluator. Analyze the provided prompt based on three key criteria: Clarity, Specificity, and Misinterpretation Risk. Return ONLY valid JSON with no markdown wrapping, no code fences, no preamble.",
+      "Provide a JSON object with these fields: rating (number 1-10), criteria (object with clarity, specificity, misinterpretationRisk, each 1-10), strengths (string array), weaknesses (string array), suggestions (string array). Return ONLY the JSON object.",
+      cfg.apiKey,
+      cfg.model,
+    );
+    if (!raw) throw new Error("Could not evaluate the prompt.");
+    const cleaned = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    try {
+      return JSON.parse(cleaned) as EvaluationData;
+    } catch {
+      throw new Error("Failed to parse evaluation results.");
+    }
+  }
+
   if (config.provider === "opencode") {
     const cfg = resolveOpenCodeConfig(config.opencodeConfig);
     if (!cfg) throw new Error("OpenCode API key is missing.");
@@ -224,6 +374,32 @@ export async function autoFixPrompt(
   const weaknesses = evaluation.weaknesses.join("\n");
   const suggestions = evaluation.suggestions.join("\n");
   const content = `Original Prompt:\n${prompt}\n\nEvaluation Weaknesses:\n${weaknesses}\n\nEvaluation Suggestions:\n${suggestions}`;
+
+  if (config.provider === "anthropic") {
+    const cfg = resolveAnthropicConfig(config.anthropicConfig);
+    if (!cfg) throw new Error("Anthropic API key missing");
+
+    const text = await generateWithAnthropic(
+      cfg.apiKey,
+      "You are an expert prompt engineer. Rewrite the provided prompt to address all identified weaknesses and incorporate all suggestions. Return ONLY the improved prompt text.",
+      [{ role: "user", content }],
+      { model: cfg.model, temperature: 0.4 },
+    );
+    return text;
+  }
+
+  if (config.provider === "codex") {
+    const cfg = resolveCodexConfig(config.codexConfig);
+    if (!cfg) throw new Error("OpenAI API key missing");
+
+    const text = await generateWithCodex(
+      cfg.apiKey,
+      "You are an expert prompt engineer. Rewrite the provided prompt to address all identified weaknesses and incorporate all suggestions. Return ONLY the improved prompt text.",
+      [{ role: "user", content }],
+      { model: cfg.model, temperature: 0.4 },
+    );
+    return text;
+  }
 
   if (config.provider === "opencode") {
     const cfg = resolveOpenCodeConfig(config.opencodeConfig);

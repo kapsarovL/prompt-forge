@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Key, Eye, EyeOff, CheckCircle2, AlertTriangle, Loader2, Trash2, Cpu, Globe } from "lucide-react";
+import { X, Key, Eye, EyeOff, CheckCircle2, AlertTriangle, Loader2, Trash2, Cpu, Globe, Bot } from "lucide-react";
 import { OPENCODE_DEFAULT_BASE_URL } from "@/lib/opencode";
 import { useModal } from "@/hooks/use-modal";
+
+type ProviderTab = "gemini" | "opencode" | "anthropic" | "codex";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -19,81 +21,188 @@ interface SettingsModalProps {
   onSetOpencodeModel: (model: string) => void;
   opencodeBaseUrl: string;
   onSetOpencodeBaseUrl: (url: string) => void;
+  onSaveAnthropicKey: (key: string) => Promise<boolean>;
+  onClearAnthropicKey: () => void;
+  hasAnthropicKey: boolean;
+  anthropicModel: string;
+  onSetAnthropicModel: (model: string) => void;
+  onSaveCodexKey: (key: string) => Promise<boolean>;
+  onClearCodexKey: () => void;
+  hasCodexKey: boolean;
+  codexModel: string;
+  onSetCodexModel: (model: string) => void;
 }
 
-export function SettingsModal({
-  isOpen,
-  onClose,
-  onSaveGeminiKey,
-  onClearGeminiKey,
-  hasGeminiKey,
-  onSaveOpenCodeKey,
-  onClearOpenCodeKey,
-  hasOpenCodeKey,
-  opencodeModel,
-  onSetOpencodeModel,
-  opencodeBaseUrl,
-  onSetOpencodeBaseUrl,
-}: SettingsModalProps) {
-  const [geminiKey, setGeminiKey] = useState("");
-  const [showGeminiKey, setShowGeminiKey] = useState(false);
-  const [isSavingGemini, setIsSavingGemini] = useState(false);
-  const [geminiStatus, setGeminiStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+const PROVIDER_TABS: { id: ProviderTab; label: string; icon: typeof Key }[] = [
+  { id: "gemini", label: "Gemini", icon: Cpu },
+  { id: "opencode", label: "OpenCode", icon: Bot },
+  { id: "anthropic", label: "Anthropic", icon: Cpu },
+  { id: "codex", label: "Codex", icon: Bot },
+];
 
-  const [opencodeKey, setOpencodeKey] = useState("");
-  const [showOpencodeKey, setShowOpencodeKey] = useState(false);
-  const [isSavingOpenCode, setIsSavingOpenCode] = useState(false);
-  const [opencodeStatus, setOpencodeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+const TAB_COLORS: Record<ProviderTab, string> = {
+  gemini: "bg-emerald-500/10 text-emerald-400",
+  opencode: "bg-amber-500/10 text-amber-400",
+  anthropic: "bg-purple-500/10 text-purple-400",
+  codex: "bg-green-500/10 text-green-400",
+};
 
-  const [modelInput, setModelInput] = useState(opencodeModel);
-  const [baseUrlInput, setBaseUrlInput] = useState(opencodeBaseUrl);
+interface ProviderFormState {
+  keyInput: string;
+  showKey: boolean;
+  isSaving: boolean;
+  status: { type: "success" | "error"; message: string } | null;
+  modelInput?: string;
+  baseUrlInput?: string;
+}
 
-  const handleSaveGemini = async () => {
-    if (!geminiKey.trim()) return;
-    setIsSavingGemini(true);
-    setGeminiStatus(null);
-    const success = await onSaveGeminiKey(geminiKey.trim());
-    setIsSavingGemini(false);
+export function SettingsModal(props: SettingsModalProps) {
+  const [activeTab, setActiveTab] = useState<ProviderTab>("gemini");
+
+  const [gemini, setGemini] = useState<ProviderFormState>({
+    keyInput: "", showKey: false, isSaving: false, status: null,
+  });
+  const [opencode, setOpencode] = useState<ProviderFormState>({
+    keyInput: "", showKey: false, isSaving: false, status: null,
+    modelInput: props.opencodeModel,
+    baseUrlInput: props.opencodeBaseUrl,
+  });
+  const [anthropic, setAnthropic] = useState<ProviderFormState>({
+    keyInput: "", showKey: false, isSaving: false, status: null,
+    modelInput: props.anthropicModel,
+  });
+  const [codex, setCodex] = useState<ProviderFormState>({
+    keyInput: "", showKey: false, isSaving: false, status: null,
+    modelInput: props.codexModel,
+  });
+
+  const updateField = <K extends keyof ProviderFormState>(
+    setter: React.Dispatch<React.SetStateAction<ProviderFormState>>,
+    field: K,
+    value: ProviderFormState[K],
+  ) => setter(prev => ({ ...prev, [field]: value }));
+
+  const handleSaveKey = async (
+    setter: React.Dispatch<React.SetStateAction<ProviderFormState>>,
+    state: ProviderFormState,
+    onSave: (key: string) => Promise<boolean>,
+    name: string,
+    onSuccess?: () => void,
+  ) => {
+    if (!state.keyInput.trim()) return;
+    updateField(setter, "isSaving", true);
+    updateField(setter, "status", null);
+    const success = await onSave(state.keyInput.trim());
+    updateField(setter, "isSaving", false);
     if (success) {
-      setGeminiStatus({ type: "success", message: "Gemini API key saved and validated." });
-      setGeminiKey("");
+      updateField(setter, "status", { type: "success", message: `${name} API key saved and validated.` });
+      updateField(setter, "keyInput", "");
+      onSuccess?.();
     } else {
-      setGeminiStatus({ type: "error", message: "Failed to validate Gemini API key." });
+      updateField(setter, "status", { type: "error", message: `Failed to validate ${name} API key.` });
     }
   };
 
-  const handleSaveOpenCode = async () => {
-    if (!opencodeKey.trim()) return;
-    setIsSavingOpenCode(true);
-    setOpencodeStatus(null);
-    const success = await onSaveOpenCodeKey(opencodeKey.trim());
-    setIsSavingOpenCode(false);
-    if (success) {
-      setOpencodeStatus({ type: "success", message: "OpenCode API key saved and validated." });
-      onSetOpencodeModel(modelInput.trim() || "opencode/big-pickle");
-      onSetOpencodeBaseUrl(baseUrlInput.trim() || OPENCODE_DEFAULT_BASE_URL);
-      setOpencodeKey("");
-    } else {
-      setOpencodeStatus({ type: "error", message: "Failed to validate OpenCode API key." });
-    }
+  const handleClearKey = (
+    setter: React.Dispatch<React.SetStateAction<ProviderFormState>>,
+    onClear: () => void,
+    name: string,
+  ) => {
+    if (!window.confirm(`Clear your ${name} API key?`)) return;
+    onClear();
+    updateField(setter, "status", { type: "success", message: `${name} API key removed.` });
   };
 
   const handleClose = () => {
-    setGeminiKey("");
-    setShowGeminiKey(false);
-    setGeminiStatus(null);
-    setOpencodeKey("");
-    setShowOpencodeKey(false);
-    setOpencodeStatus(null);
-    setModelInput(opencodeModel);
-    setBaseUrlInput(opencodeBaseUrl);
-    onClose();
+    setGemini({ keyInput: "", showKey: false, isSaving: false, status: null });
+    setOpencode({ keyInput: "", showKey: false, isSaving: false, status: null, modelInput: props.opencodeModel, baseUrlInput: props.opencodeBaseUrl });
+    setAnthropic({ keyInput: "", showKey: false, isSaving: false, status: null, modelInput: props.anthropicModel });
+    setCodex({ keyInput: "", showKey: false, isSaving: false, status: null, modelInput: props.codexModel });
+    setActiveTab("gemini");
+    props.onClose();
   };
 
   const { handleBackdropClick } = useModal(handleClose);
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "gemini":
+        return (
+          <ProviderSettings
+            state={gemini}
+            setState={setGemini}
+            name="Gemini"
+            description="Primary prompt generation provider"
+            accentColor={TAB_COLORS.gemini}
+            placeholder="AIza..."
+            docUrl="https://aistudio.google.com/app/apikey"
+            docLabel="Google AI Studio"
+            hasKey={props.hasGeminiKey}
+            onSave={() => handleSaveKey(setGemini, gemini, props.onSaveGeminiKey, "Gemini")}
+            onClear={() => handleClearKey(setGemini, props.onClearGeminiKey, "Gemini")}
+          />
+        );
+      case "opencode":
+        return (
+          <OpenCodeSettings
+            state={opencode}
+            setState={setOpencode}
+            name="OpenCode"
+            description="Alternative provider via Zen API"
+            accentColor={TAB_COLORS.opencode}
+            placeholder="oc_..."
+            docUrl="https://opencode.ai/zen"
+            docLabel="opencode.ai/zen"
+            hasKey={props.hasOpenCodeKey}
+            onSave={() => handleSaveKey(setOpencode, opencode, props.onSaveOpenCodeKey, "OpenCode", () => {
+              props.onSetOpencodeModel(opencode.modelInput?.trim() || "opencode/big-pickle");
+              props.onSetOpencodeBaseUrl(opencode.baseUrlInput?.trim() || OPENCODE_DEFAULT_BASE_URL);
+            })}
+            onClear={() => handleClearKey(setOpencode, props.onClearOpenCodeKey, "OpenCode")}
+          />
+        );
+      case "anthropic":
+        return (
+          <ProviderSettings
+            state={anthropic}
+            setState={setAnthropic}
+            name="Anthropic"
+            description="Claude model provider"
+            accentColor={TAB_COLORS.anthropic}
+            placeholder="sk-ant-..."
+            docUrl="https://console.anthropic.com/settings/keys"
+            docLabel="console.anthropic.com"
+            hasKey={props.hasAnthropicKey}
+            onSave={() => handleSaveKey(setAnthropic, anthropic, props.onSaveAnthropicKey, "Anthropic", () => {
+              props.onSetAnthropicModel(anthropic.modelInput?.trim() || "claude-sonnet-4-20250514");
+            })}
+            onClear={() => handleClearKey(setAnthropic, props.onClearAnthropicKey, "Anthropic")}
+          />
+        );
+      case "codex":
+        return (
+          <ProviderSettings
+            state={codex}
+            setState={setCodex}
+            name="OpenAI Codex"
+            description="GPT-4o, o3-mini models"
+            accentColor={TAB_COLORS.codex}
+            placeholder="sk-..."
+            docUrl="https://platform.openai.com/api-keys"
+            docLabel="platform.openai.com"
+            hasKey={props.hasCodexKey}
+            onSave={() => handleSaveKey(setCodex, codex, props.onSaveCodexKey, "OpenAI", () => {
+              props.onSetCodexModel(codex.modelInput?.trim() || "gpt-4o");
+            })}
+            onClear={() => handleClearKey(setCodex, props.onClearCodexKey, "OpenAI")}
+          />
+        );
+    }
+  };
+
   return (
     <AnimatePresence>
-      {isOpen && (
+      {props.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl" role="dialog" aria-modal="true" aria-label="API settings" onClick={handleBackdropClick}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -121,233 +230,197 @@ export function SettingsModal({
               </button>
             </div>
 
+            {/* Tab Bar */}
+            <div className="flex p-1.5 mx-8 mt-6 bg-black/40 border border-white/10 rounded-xl">
+              {PROVIDER_TABS.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-[10px] font-bold transition-all ${
+                      activeTab === tab.id
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        : "text-zinc-500 hover:text-zinc-300 border border-transparent"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Body */}
-            <div className="p-8 space-y-10 overflow-y-auto max-h-[70vh]">
-              {/* ===== Gemini Section ===== */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 pb-2 border-b border-white/5">
-                  <div className="w-8 h-8 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                    <Key className="w-4 h-4 text-emerald-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-white">Google Gemini</h4>
-                    <p className="text-[10px] text-zinc-500">Primary prompt generation provider</p>
-                  </div>
-                </div>
-
-                {/* Status */}
-                {hasGeminiKey && !geminiStatus && (
-                  <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
-                    <p className="text-sm text-green-300">Custom Gemini API key is active.</p>
-                  </div>
-                )}
-                {!hasGeminiKey && !geminiStatus && (
-                  <div className="flex items-center gap-3 p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-2xl">
-                    <AlertTriangle className="w-5 h-5 text-zinc-500 shrink-0" />
-                    <p className="text-sm text-zinc-400">Using default environment Gemini API key.</p>
-                  </div>
-                )}
-                {geminiStatus && (
-                  <div className={`flex items-center gap-3 p-4 rounded-2xl ${
-                    geminiStatus.type === "success"
-                      ? "bg-green-500/10 border border-green-500/20"
-                      : "bg-red-500/10 border border-red-500/20"
-                  }`}>
-                    {geminiStatus.type === "success" ? <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />}
-                    <p className={`text-sm ${geminiStatus.type === "success" ? "text-green-300" : "text-red-300"}`}>{geminiStatus.message}</p>
-                  </div>
-                )}
-
-                <form
-                  onSubmit={(e) => { e.preventDefault(); handleSaveGemini(); }}
-                  className="space-y-3"
+            <div className="p-8 overflow-y-auto max-h-[70vh]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15 }}
                 >
-                  <label htmlFor="gemini-api-key" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">API Key</label>
-                  <div className="relative">
-                    <input
-                      id="gemini-api-key"
-                      name="gemini-api-key"
-                      type={showGeminiKey ? "text" : "password"}
-                      value={geminiKey}
-                      onChange={(e) => setGeminiKey(e.target.value)}
-                      placeholder="AIza..."
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
-                    />
-                    <button
-                      type="button"
-                      aria-label={showGeminiKey ? "Hide Gemini key" : "Show Gemini key"}
-                      onClick={() => setShowGeminiKey(!showGeminiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
-                    >
-                      {showGeminiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-zinc-600">
-                    Get one at{" "}
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 underline">
-                      Google AI Studio
-                    </a>
-                  </p>
-                  <div className="flex gap-3">
-                    <button
-                      type="submit"
-                      disabled={!geminiKey.trim() || isSavingGemini}
-                      className="flex-1 py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 disabled:bg-zinc-800 flex items-center justify-center gap-2"
-                    >
-                      {isSavingGemini ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                      {isSavingGemini ? "Validating..." : "Save & Validate"}
-                    </button>
-                    {hasGeminiKey && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!window.confirm("Clear your Gemini API key?")) return;
-                          onClearGeminiKey();
-                          setGeminiStatus({ type: "success", message: "Custom Gemini API key removed. Using default." });
-                        }}
-                        className="px-4 py-3 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-all border border-red-500/20"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </form>
-              </div>
-
-              {/* ===== OpenCode Section ===== */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 pb-2 border-b border-white/5">
-                  <div className="w-8 h-8 bg-amber-500/10 rounded-xl flex items-center justify-center">
-                    <Cpu className="w-4 h-4 text-amber-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-white">OpenCode</h4>
-                    <p className="text-[10px] text-zinc-500">Alternative provider via Zen API</p>
-                  </div>
-                </div>
-
-                {/* Status */}
-                {hasOpenCodeKey && !opencodeStatus && (
-                  <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
-                    <p className="text-sm text-green-300">OpenCode API key is active.</p>
-                  </div>
-                )}
-                {!hasOpenCodeKey && !opencodeStatus && (
-                  <div className="flex items-center gap-3 p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-2xl">
-                    <AlertTriangle className="w-5 h-5 text-zinc-500 shrink-0" />
-                    <p className="text-sm text-zinc-400">No OpenCode API key configured.</p>
-                  </div>
-                )}
-                {opencodeStatus && (
-                  <div className={`flex items-center gap-3 p-4 rounded-2xl ${
-                    opencodeStatus.type === "success"
-                      ? "bg-green-500/10 border border-green-500/20"
-                      : "bg-red-500/10 border border-red-500/20"
-                  }`}>
-                    {opencodeStatus.type === "success" ? <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />}
-                    <p className={`text-sm ${opencodeStatus.type === "success" ? "text-green-300" : "text-red-300"}`}>{opencodeStatus.message}</p>
-                  </div>
-                )}
-
-                <form
-                  onSubmit={(e) => { e.preventDefault(); handleSaveOpenCode(); }}
-                  className="space-y-3"
-                >
-                  <label htmlFor="opencode-api-key" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">API Key</label>
-                  <div className="relative">
-                    <input
-                      id="opencode-api-key"
-                      name="opencode-api-key"
-                      type={showOpencodeKey ? "text" : "password"}
-                      value={opencodeKey}
-                      onChange={(e) => setOpencodeKey(e.target.value)}
-                      placeholder="oc_..."
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
-                    />
-                    <button
-                      type="button"
-                      aria-label={showOpencodeKey ? "Hide OpenCode key" : "Show OpenCode key"}
-                      onClick={() => setShowOpencodeKey(!showOpencodeKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
-                    >
-                      {showOpencodeKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-zinc-600">
-                    Your OpenCode Zen API key. Get one at{" "}
-                    <a href="https://opencode.ai/zen" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 underline">
-                      opencode.ai/zen
-                    </a>
-                  </p>
-
-                  {/* Model Selection */}
-                  <div className="space-y-3">
-                    <label htmlFor="opencode-model" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Model</label>
-                    <input
-                      id="opencode-model"
-                      name="opencode-model"
-                      type="text"
-                      value={modelInput}
-                      onChange={(e) => setModelInput(e.target.value)}
-                      placeholder="opencode/big-pickle"
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
-                    />
-                    <p className="text-xs text-zinc-600">
-                      The model ID used when OpenCode is the active provider.
-                    </p>
-                  </div>
-
-                  {/* Base URL */}
-                  <div className="space-y-3">
-                    <label htmlFor="opencode-base-url" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Base URL</label>
-                    <div className="relative">
-                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
-                      <input
-                        id="opencode-base-url"
-                        name="opencode-base-url"
-                        type="text"
-                        value={baseUrlInput}
-                        onChange={(e) => setBaseUrlInput(e.target.value)}
-                        placeholder={OPENCODE_DEFAULT_BASE_URL}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
-                      />
-                    </div>
-                    <p className="text-xs text-zinc-600">
-                      The API endpoint URL. Leave as default for OpenCode Zen.
-                    </p>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      type="submit"
-                      disabled={!opencodeKey.trim() || isSavingOpenCode}
-                      className="flex-1 py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 disabled:bg-zinc-800 flex items-center justify-center gap-2"
-                    >
-                      {isSavingOpenCode ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                      {isSavingOpenCode ? "Validating..." : "Save & Validate"}
-                    </button>
-                    {hasOpenCodeKey && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!window.confirm("Clear your OpenCode API key?")) return;
-                          onClearOpenCodeKey();
-                          setOpencodeStatus({ type: "success", message: "OpenCode API key removed." });
-                        }}
-                        className="px-4 py-3 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-all border border-red-500/20"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </form>
-              </div>
+                  {renderTabContent()}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>
       )}
     </AnimatePresence>
   );
+}
+
+// Shared provider settings form
+function ProviderSettings({
+  state, setState, name, description, accentColor, placeholder, docUrl, docLabel, hasKey, onSave, onClear,
+}: {
+  state: ProviderFormState;
+  setState: React.Dispatch<React.SetStateAction<ProviderFormState>>;
+  name: string;
+  description: string;
+  accentColor: string;
+  placeholder: string;
+  docUrl: string;
+  docLabel: string;
+  hasKey: boolean;
+  onSave: () => void | Promise<void>;
+  onClear: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${accentColor.split(" ")[0]}`}>
+          <Key className="w-4 h-4" />
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold text-white">{name}</h4>
+          <p className="text-[10px] text-zinc-500">{description}</p>
+        </div>
+      </div>
+
+      {hasKey && !state.status && (
+        <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
+          <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+          <p className="text-sm text-green-300">{name} API key is active.</p>
+        </div>
+      )}
+      {!hasKey && !state.status && (
+        <div className="flex items-center gap-3 p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-2xl">
+          <AlertTriangle className="w-5 h-5 text-zinc-500 shrink-0" />
+          <p className="text-sm text-zinc-400">No {name} API key configured.</p>
+        </div>
+      )}
+      {state.status && (
+        <div className={`flex items-center gap-3 p-4 rounded-2xl ${
+          state.status.type === "success"
+            ? "bg-green-500/10 border border-green-500/20"
+            : "bg-red-500/10 border border-red-500/20"
+        }`}>
+          {state.status.type === "success" ? <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />}
+          <p className={`text-sm ${state.status.type === "success" ? "text-green-300" : "text-red-300"}`}>{state.status.message}</p>
+        </div>
+      )}
+
+      <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="space-y-3">
+        <label htmlFor={`${name.toLowerCase().replace(/\s+/g, "-")}-api-key`} className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">API Key</label>
+        <div className="relative">
+          <input
+            id={`${name.toLowerCase().replace(/\s+/g, "-")}-api-key`}
+            type={state.showKey ? "text" : "password"}
+            value={state.keyInput}
+            onChange={(e) => setState(prev => ({ ...prev, keyInput: e.target.value }))}
+            placeholder={placeholder}
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
+          />
+          <button
+            type="button"
+            aria-label={state.showKey ? `Hide ${name} key` : `Show ${name} key`}
+            onClick={() => setState(prev => ({ ...prev, showKey: !prev.showKey }))}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
+            {state.showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <p className="text-xs text-zinc-600">
+          Get one at{" "}
+          <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 underline">
+            {docLabel}
+          </a>
+        </p>
+
+        {/* Model input (not for Gemini which uses dropdown) */}
+        {state.modelInput !== undefined && (
+          <div className="space-y-3">
+            <label htmlFor={`${name.toLowerCase().replace(/\s+/g, "-")}-model`} className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Model</label>
+            <input
+              id={`${name.toLowerCase().replace(/\s+/g, "-")}-model`}
+              type="text"
+              value={state.modelInput}
+              onChange={(e) => setState(prev => ({ ...prev, modelInput: e.target.value }))}
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
+            />
+            <p className="text-xs text-zinc-600">The model ID used when {name} is the active provider.</p>
+          </div>
+        )}
+
+        {/* Base URL input (OpenCode only) */}
+        {state.baseUrlInput !== undefined && (
+          <div className="space-y-3">
+            <label htmlFor="opencode-base-url" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Base URL</label>
+            <div className="relative">
+              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
+              <input
+                id="opencode-base-url"
+                type="text"
+                value={state.baseUrlInput}
+                onChange={(e) => setState(prev => ({ ...prev, baseUrlInput: e.target.value }))}
+                placeholder={OPENCODE_DEFAULT_BASE_URL}
+                className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
+              />
+            </div>
+            <p className="text-xs text-zinc-600">The API endpoint URL. Leave as default for OpenCode Zen.</p>
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={!state.keyInput.trim() || state.isSaving}
+            className="flex-1 py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 disabled:bg-zinc-800 flex items-center justify-center gap-2"
+          >
+            {state.isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            {state.isSaving ? "Validating..." : "Save & Validate"}
+          </button>
+          {hasKey && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="px-4 py-3 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-all border border-red-500/20"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// OpenCode variant with model + base URL
+function OpenCodeSettings(props: {
+  state: ProviderFormState;
+  setState: React.Dispatch<React.SetStateAction<ProviderFormState>>;
+  name: string;
+  description: string;
+  accentColor: string;
+  placeholder: string;
+  docUrl: string;
+  docLabel: string;
+  hasKey: boolean;
+  onSave: () => void | Promise<void>;
+  onClear: () => void;
+}) {
+  return <ProviderSettings {...props} />;
 }

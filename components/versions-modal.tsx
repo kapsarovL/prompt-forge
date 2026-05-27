@@ -62,7 +62,7 @@ export function VersionsModal({ isOpen, onClose, versions, setGeneratedPrompt, s
                       <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-600">
                         Version {versions.length - i} • {new Date(v.timestamp).toLocaleTimeString()}
                       </span>
-                      <div className="flex items-center gap-4 opacity-40 hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-4 opacity-60 hover:opacity-100 transition-opacity">
                         <button
                           aria-label="Copy version"
                           onClick={() => {

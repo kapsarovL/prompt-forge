@@ -21,8 +21,26 @@ Thanks for your interest in contributing! Here's how to get started.
 1. Create a branch: `git checkout -b feature/your-feature`
 2. Make your changes
 3. Run `pnpm lint` to check for issues
-4. Run `pnpm build` to verify the build passes
-5. Push and open a pull request
+4. Run `pnpm test` to ensure existing tests pass
+5. Run `pnpm build` to verify the build succeeds
+6. Push and open a pull request
+
+## Running Tests
+
+- **Unit tests**: `pnpm test` — vitest suite covering types, API clients, and utilities
+- **Watch mode**: `pnpm test:watch` — re-runs on file changes during development
+- **Coverage**: `pnpm coverage` — generates a coverage report in `/coverage`
+- **E2E tests**: `pnpm test:e2e` — Playwright suite (requires the dev server running)
+
+All tests must pass before a pull request can be merged. If you're adding a new feature, please include corresponding tests.
+
+## Reporting Bugs
+
+Open a [bug report](https://github.com/prismaflux/prompt-forge/issues/new?template=bug_report.md) with:
+- A clear description of the issue
+- Steps to reproduce
+- Expected vs actual behavior
+- Browser and OS information
 
 ## Code Style
 

@@ -15,6 +15,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "PromptForge",
   description: "Precision prompts at the speed of thought. Transform ideas into optimized, high-performance instructions.",
+  metadataBase: new URL("https://prompt-forge.vercel.app"),
+  openGraph: {
+    title: "PromptForge",
+    description: "Precision prompts at the speed of thought. Transform ideas into optimized, high-performance instructions.",
+    url: "https://prompt-forge.vercel.app",
+    siteName: "PromptForge",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PromptForge",
+    description: "Precision prompts at the speed of thought. Transform ideas into optimized, high-performance instructions.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

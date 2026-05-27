@@ -10,7 +10,7 @@ interface SkeletonBarProps {
 const SkeletonBar = ({ className, width }: SkeletonBarProps) => (
   <div
     className={cn(
-      "h-3 bg-zinc-800/50 rounded-md animate-pulse shimmer",
+      "h-3 bg-zinc-700/30 rounded-md animate-pulse shimmer",
       width || "w-full",
       className
     )}
@@ -18,7 +18,7 @@ const SkeletonBar = ({ className, width }: SkeletonBarProps) => (
 );
 
 const SkeletonBlock = ({ className }: { className?: string }) => (
-  <div className={cn("bg-zinc-800/40 rounded-xl animate-pulse shimmer", className)} />
+  <div className={cn("bg-zinc-700/25 rounded-xl animate-pulse shimmer", className)} />
 );
 
 export const OutputPanelSkeleton = () => (

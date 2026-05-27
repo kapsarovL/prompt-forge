@@ -77,7 +77,7 @@ export function FeedbackModal({
                         aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
                         onClick={() => setFeedbackRating(star)}
                         className={`p-2 transition-all hover:scale-110 ${
-                          feedbackRating >= star ? "text-amber-400" : "text-zinc-800"
+                          feedbackRating >= star ? "text-amber-400" : "text-zinc-600"
                         }`}
                       >
                         <Star className="w-8 h-8" fill={feedbackRating >= star ? "currentColor" : "none"} />

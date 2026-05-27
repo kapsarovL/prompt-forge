@@ -3,25 +3,27 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { GoogleGenAI } from "@google/genai";
 import { ForgeNavbar } from "@/components/forge-navbar";
-import { ForgeFooter } from "@/components/forge-footer";
 import { ForgeHero } from "@/components/forge-hero";
+import { ForgeFooter } from "@/components/forge-footer";
 import { ForgeFeatures } from "@/components/forge-features";
 import { ForgeGenerator } from "@/components/forge-generator";
 import { ForgeVault } from "@/components/forge-vault";
 import { ForgeToast } from "@/components/forge-toast";
-import { VersionsModal } from "@/components/versions-modal";
 import { GalleryModal } from "@/components/gallery-modal";
+import { VersionsModal } from "@/components/versions-modal";
 import { EvaluationModal } from "@/components/evaluation-modal";
 import { FeedbackModal } from "@/components/feedback-modal";
 import { SettingsModal } from "@/components/settings-modal";
-import { CATEGORIES, MODELS, OPENCODE_MODELS, BUILT_IN_TEMPLATES } from "@/lib/types";
-import type { EvaluationData, PromptHistory, PromptVersion, Provider } from "@/lib/types";
+import { CATEGORIES, MODELS, OPENCODE_MODELS, ANTHROPIC_MODELS, CODEX_MODELS, BUILT_IN_TEMPLATES } from "@/lib/types";
+import type { EvaluationData, PromptHistory, PromptVersion, Provider, Template } from "@/lib/types";
 import { generatePrompt, evaluatePrompt, refinePrompt, smartEnhance, autoFixPrompt } from "@/lib/api";
 import type { ApiConfig } from "@/lib/api";
 import { getErrorMessage, getApiKey } from "@/lib/gemini";
 import { getOpenCodeConfig, validateOpenCodeKey, OPENCODE_DEFAULT_BASE_URL } from "@/lib/opencode";
 import type { OpenCodeConfig } from "@/lib/opencode";
 import { OPENCODE_DEFAULT_MODEL } from "@/lib/opencode";
+import * as anthropicLib from "@/lib/anthropic";
+import * as codexLib from "@/lib/codex";
 
 export function PromptForge() {
   const [description, setDescription] = useState("");
@@ -43,6 +45,30 @@ export function PromptForge() {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [gallerySearch, setGallerySearch] = useState("");
   const [galleryCategory, setGalleryCategory] = useState("all");
+
+  const allTemplates = useMemo<Template[]>(() => {
+    const builtIn: Template[] = [];
+    for (const [cat, texts] of Object.entries(BUILT_IN_TEMPLATES)) {
+      for (const text of texts) {
+        builtIn.push({ text, category: cat, isCustom: false });
+      }
+    }
+    const custom: Template[] = [];
+    for (const [cat, texts] of Object.entries(customTemplates)) {
+      for (const text of texts) {
+        custom.push({ text, category: cat, isCustom: true });
+      }
+    }
+    return [...builtIn, ...custom];
+  }, [customTemplates]);
+
+  const filteredTemplates = useMemo<Template[]>(() => {
+    return allTemplates.filter(t => {
+      const matchesCategory = galleryCategory === "all" || t.category === galleryCategory;
+      const matchesSearch = !gallerySearch || t.text.toLowerCase().includes(gallerySearch.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [allTemplates, gallerySearch, galleryCategory]);
 
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState(0);
@@ -72,11 +98,19 @@ export function PromptForge() {
   const [opencodeModel, setOpencodeModel] = useState(OPENCODE_DEFAULT_MODEL);
   const [opencodeBaseUrl, setOpencodeBaseUrl] = useState(OPENCODE_DEFAULT_BASE_URL);
 
+  const [anthropicKey, setAnthropicKeyState] = useState<string | null>(null);
+  const [anthropicModel, setAnthropicModelState] = useState(ANTHROPIC_MODELS[0].id);
+
+  const [codexKey, setCodexKeyState] = useState<string | null>(null);
+  const [codexModel, setCodexModelState] = useState(CODEX_MODELS[0].id);
+
   const getApiConfig = (): ApiConfig => ({
     provider,
     geminiKey: userApiKey ?? undefined,
     geminiModel: model,
     opencodeConfig: getEffectiveOpenCodeConfig(),
+    anthropicConfig: getEffectiveAnthropicConfig(),
+    codexConfig: getEffectiveCodexConfig(),
   });
 
   // Load provider state from localStorage
@@ -93,8 +127,20 @@ export function PromptForge() {
     const savedBaseUrl = localStorage.getItem("promptforge_opencode_base_url");
     if (savedBaseUrl) setOpencodeBaseUrl(savedBaseUrl);
 
+    const savedAnthropicKey = localStorage.getItem("pf_anthropic_key");
+    if (savedAnthropicKey) setAnthropicKeyState(savedAnthropicKey);
+
+    const savedAnthropicModel = localStorage.getItem("pf_anthropic_model");
+    if (savedAnthropicModel) setAnthropicModelState(savedAnthropicModel);
+
+    const savedCodexKey = localStorage.getItem("pf_codex_key");
+    if (savedCodexKey) setCodexKeyState(savedCodexKey);
+
+    const savedCodexModel = localStorage.getItem("pf_codex_model");
+    if (savedCodexModel) setCodexModelState(savedCodexModel);
+
     const savedProvider = localStorage.getItem("promptforge_provider") as Provider | null;
-    if (savedProvider === "gemini" || savedProvider === "opencode") setProvider(savedProvider);
+    if (savedProvider === "gemini" || savedProvider === "opencode" || savedProvider === "anthropic" || savedProvider === "codex") setProvider(savedProvider);
   }, []);
 
   // Persist provider preference
@@ -159,9 +205,78 @@ export function PromptForge() {
     return null;
   };
 
+  // Anthropic API key handlers
+  const handleSaveAnthropicKey = async (key: string): Promise<boolean> => {
+    const valid = await anthropicLib.validateAnthropicKey(key);
+    if (valid) {
+      setAnthropicKeyState(key);
+      anthropicLib.setAnthropicKey(key);
+      anthropicLib.setAnthropicModel(anthropicModel);
+    }
+    return valid;
+  };
+
+  const handleClearAnthropicKey = () => {
+    setAnthropicKeyState(null);
+    anthropicLib.removeAnthropicKey();
+  };
+
+  const handleSetAnthropicModel = (model: string) => {
+    setAnthropicModelState(model);
+    anthropicLib.setAnthropicModel(model);
+  };
+
+  const getEffectiveAnthropicConfig = (): { apiKey: string; model: string } | null => {
+    const envKey = anthropicLib.getAnthropicKey();
+    if (envKey) return { apiKey: envKey, model: anthropicModel };
+    if (anthropicKey) {
+      return { apiKey: anthropicKey, model: anthropicModel };
+    }
+    return null;
+  };
+
+  // OpenAI Codex handlers
+  const handleSaveCodexKey = async (key: string): Promise<boolean> => {
+    const valid = await codexLib.validateCodexKey(key);
+    if (valid) {
+      setCodexKeyState(key);
+      codexLib.setCodexKey(key);
+      codexLib.setCodexModel(codexModel);
+    }
+    return valid;
+  };
+
+  const handleClearCodexKey = () => {
+    setCodexKeyState(null);
+    codexLib.removeCodexKey();
+  };
+
+  const handleSetCodexModel = (model: string) => {
+    setCodexModelState(model);
+    codexLib.setCodexModel(model);
+  };
+
+  const getEffectiveCodexConfig = (): { apiKey: string; model: string } | null => {
+    const envKey = codexLib.getCodexKey();
+    if (envKey) return { apiKey: envKey, model: codexModel };
+    if (codexKey) {
+      return { apiKey: codexKey, model: codexModel };
+    }
+    return null;
+  };
+
   const showToast = (message: string, type: 'success' | 'info' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleDeleteTemplate = (e: React.MouseEvent, text: string, catId: string) => {
+    e.stopPropagation();
+    setCustomTemplates(prev => {
+      const current = prev[catId] || [];
+      return { ...prev, [catId]: current.filter(t => t !== text) };
+    });
+    showToast("Template deleted");
   };
 
   useEffect(() => {
@@ -217,7 +332,7 @@ export function PromptForge() {
       const text = await generatePrompt(description, category, getApiConfig());
       setGeneratedPrompt(text);
       addVersion(text);
-      const modelName = provider === "opencode" ? opencodeModel : model;
+      const modelName = provider === "opencode" ? opencodeModel : provider === "anthropic" ? anthropicModel : provider === "codex" ? codexModel : model;
       addHistory({ description, category, model: modelName, prompt: text });
     } catch (err) {
       console.error("Error generating prompt:", err);
@@ -251,7 +366,7 @@ export function PromptForge() {
       setIsEvaluationOpen(false);
       showToast("Prompt optimized based on evaluation!", "success");
       addVersion(text);
-      const modelName = provider === "opencode" ? opencodeModel : model;
+      const modelName = provider === "opencode" ? opencodeModel : provider === "anthropic" ? anthropicModel : provider === "codex" ? codexModel : model;
       addHistory({ description: description + " (Auto-Optimized)", category, model: modelName, prompt: text });
     } catch (err) {
       console.error(err);
@@ -319,7 +434,7 @@ export function PromptForge() {
       const text = await refinePrompt(generatedPrompt, refineInstruction, getApiConfig());
       setGeneratedPrompt(text);
       addVersion(text);
-      const modelName = provider === "opencode" ? opencodeModel : model;
+      const modelName = provider === "opencode" ? opencodeModel : provider === "anthropic" ? anthropicModel : provider === "codex" ? codexModel : model;
       addHistory({ description: description + " (Refined)", category, model: modelName, prompt: text });
       setRefineInstruction("");
       setShowRefineInput(false);
@@ -368,41 +483,24 @@ export function PromptForge() {
     showToast("Template saved successfully!");
   };
 
-  const handleDeleteTemplate = (e: React.MouseEvent, templateToDelete: string, catId: string = category) => {
-    e.stopPropagation();
-    if (!window.confirm("Delete this template?")) return;
-    setCustomTemplates(prev => ({
-      ...prev,
-      [catId]: (prev[catId] || []).filter(t => t !== templateToDelete),
-    }));
-  };
-
-  const allTemplates = useMemo(() => {
-    const combined: { text: string; category: string; isCustom: boolean }[] = [];
-    Object.entries(BUILT_IN_TEMPLATES).forEach(([cat, list]) => {
-      list.forEach(text => combined.push({ text, category: cat, isCustom: false }));
-    });
-    Object.entries(customTemplates).forEach(([cat, list]) => {
-      list.forEach(text => combined.push({ text, category: cat, isCustom: true }));
-    });
-    return combined;
-  }, [customTemplates]);
-
-  const filteredTemplates = useMemo(() => allTemplates.filter(t => {
-    const matchesSearch = t.text.toLowerCase().includes(gallerySearch.toLowerCase());
-    const matchesCategory = galleryCategory === "all" || t.category === galleryCategory;
-    return matchesSearch && matchesCategory;
-  }), [allTemplates, gallerySearch, galleryCategory]);
-
-  const effectiveModels = provider === "opencode" ? OPENCODE_MODELS : MODELS;
+  const effectiveModels = provider === "opencode" ? OPENCODE_MODELS : provider === "anthropic" ? ANTHROPIC_MODELS : provider === "codex" ? CODEX_MODELS : MODELS;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-500/30">
-      <ForgeNavbar onOpenFeedback={() => setIsFeedbackOpen(true)} />
+    <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-500/30 relative">
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-15%] left-[-10%] h-[50%] w-[50%] rounded-full bg-amber-600/8 blur-[120px]" />
+        <div className="absolute bottom-[-15%] right-[-10%] h-[50%] w-[50%] rounded-full bg-orange-600/8 blur-[120px]" />
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay" />
+      </div>
+      <div className="relative z-10">
+      <ForgeNavbar
+        onOpenFeedback={() => setIsFeedbackOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenVersions={() => setIsVersionsOpen(true)}
+        hasGeneratedPrompt={generatedPrompt.length > 0}
+      />
 
-      <ForgeHero onBrowseGallery={() => setIsGalleryOpen(true)} />
-
-      <ForgeFeatures />
+      <ForgeHero />
 
       <ForgeGenerator
         description={description}
@@ -429,7 +527,7 @@ export function PromptForge() {
         handleSaveTemplate={handleSaveTemplate}
         onOpenSettings={() => setIsSettingsOpen(true)}
         hasCustomKey={userApiKey !== null}
-        hasApiKey={provider === "gemini" ? !!getApiKey() : !!(opencodeKey || getOpenCodeConfig())}
+        hasApiKey={provider === "gemini" ? !!getApiKey() : provider === "opencode" ? !!(opencodeKey || getOpenCodeConfig()) : provider === "anthropic" ? !!(anthropicKey || anthropicLib.getAnthropicKey()) : !!(codexKey || codexLib.getCodexKey())}
         categories={CATEGORIES}
         models={effectiveModels}
         provider={provider}
@@ -437,6 +535,7 @@ export function PromptForge() {
         opencodeModel={opencodeModel}
         onSetOpencodeModel={handleSetOpencodeModel}
         onOpenVersions={() => setIsVersionsOpen(true)}
+        onOpenGallery={() => setIsGalleryOpen(true)}
       />
 
       <ForgeVault
@@ -454,6 +553,8 @@ export function PromptForge() {
         showToast={showToast}
       />
 
+      <ForgeFeatures />
+
       <ForgeFooter />
 
       <VersionsModal
@@ -461,21 +562,6 @@ export function PromptForge() {
         onClose={() => setIsVersionsOpen(false)}
         versions={versions}
         setGeneratedPrompt={setGeneratedPrompt}
-        showToast={showToast}
-      />
-
-      <GalleryModal
-        isOpen={isGalleryOpen}
-        onClose={() => setIsGalleryOpen(false)}
-        gallerySearch={gallerySearch}
-        setGallerySearch={setGallerySearch}
-        galleryCategory={galleryCategory}
-        setGalleryCategory={setGalleryCategory}
-        filteredTemplates={filteredTemplates}
-        categories={CATEGORIES}
-        setDescription={setDescription}
-        setCategory={setCategory}
-        handleDeleteTemplate={handleDeleteTemplate}
         showToast={showToast}
       />
 
@@ -513,9 +599,35 @@ export function PromptForge() {
         onSetOpencodeModel={handleSetOpencodeModel}
         opencodeBaseUrl={opencodeBaseUrl}
         onSetOpencodeBaseUrl={handleSetOpencodeBaseUrl}
+        onSaveAnthropicKey={handleSaveAnthropicKey}
+        onClearAnthropicKey={handleClearAnthropicKey}
+        hasAnthropicKey={anthropicKey !== null}
+        anthropicModel={anthropicModel}
+        onSetAnthropicModel={handleSetAnthropicModel}
+        onSaveCodexKey={handleSaveCodexKey}
+        onClearCodexKey={handleClearCodexKey}
+        hasCodexKey={codexKey !== null}
+        codexModel={codexModel}
+        onSetCodexModel={handleSetCodexModel}
+      />
+
+      <GalleryModal
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        gallerySearch={gallerySearch}
+        setGallerySearch={setGallerySearch}
+        galleryCategory={galleryCategory}
+        setGalleryCategory={setGalleryCategory}
+        filteredTemplates={filteredTemplates}
+        categories={CATEGORIES}
+        setDescription={setDescription}
+        setCategory={setCategory}
+        handleDeleteTemplate={handleDeleteTemplate}
+        showToast={(msg) => showToast(msg)}
       />
 
       <ForgeToast toast={toast} onClose={() => setToast(null)} />
+      </div>
     </div>
   );
 }

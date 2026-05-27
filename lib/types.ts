@@ -65,7 +65,31 @@ export const OPENCODE_MODELS: OpenCodeModelOption[] = [
   { id: "opencode/big-pickle-2", label: "Big Pickle 2", description: "Latest generation" },
 ];
 
-export type Provider = "gemini" | "opencode";
+export type Provider = "gemini" | "opencode" | "anthropic" | "codex";
+
+export interface AnthropicModelOption {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export const ANTHROPIC_MODELS: AnthropicModelOption[] = [
+  { id: "claude-sonnet-4-20250514", label: "Claude Sonnet 4", description: "Best overall, flagship" },
+  { id: "claude-haiku-4-20250514", label: "Claude Haiku 4", description: "Fast, lightweight" },
+  { id: "claude-opus-4-20250514", label: "Claude Opus 4", description: "Most capable, deep reasoning" },
+];
+
+export interface CodexModelOption {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export const CODEX_MODELS: CodexModelOption[] = [
+  { id: "gpt-4o", label: "GPT-4o", description: "Best all-around, multimodal" },
+  { id: "gpt-4o-mini", label: "GPT-4o Mini", description: "Fast, cost-effective" },
+  { id: "o3-mini", label: "o3-mini", description: "Reasoning, complex tasks" },
+];
 
 export interface Template {
   text: string;

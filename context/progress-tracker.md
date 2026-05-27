@@ -72,14 +72,52 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 
 - (none)
 
+## Recently Completed
+- [x] Anthropic provider support — `lib/anthropic.ts` (fetch-based, no SDK dep), `Provider` union updated, `ANTHROPIC_MODELS` added, 5 API functions branched via `ApiConfig.anthropicConfig`, Anthropic toggle button in forge-generator, Anthropic settings in settings-modal, state persistence in prompt-forge
+- [x] OpenAI Codex provider support — `lib/codex.ts` (fetch-based, no SDK dep), `Provider` union + `CODEX_MODELS` added, 5 API functions branched via `ApiConfig.codexConfig`, Codex toggle button in forge-generator, Codex settings in settings-modal, state persistence in prompt-forge
+
+### Landing Page Overhaul
+- [x] `FeatureCard` — added `icon` prop; icon container with amber tint + hover state
+- [x] `ScrollProgress` — fixed top-of-viewport amber gradient bar that fills on scroll
+- [x] `Navbar` — desktop scroll links (Features, How It Works, FAQ) + mobile hamburger with slide-down menu
+- [x] `Hero` — gradient-accent headline, animated product mockup showing input/output panels with browser chrome
+- [x] `FeaturesSection` — existing 6-card grid wrapped in `rounded-2xl` overflow-hidden, each card now has an icon
+- [x] `HowItWorksSection` — 3-step flow with icon circles, numbered badges, connecting gradient line on desktop
+- [x] `WhyPromptForgeSection` — 2x2 differentiators grid (zero backend, multiple providers, version tracking, evaluation)
+- [x] `FAQSection` — 6-question accordion with AnimatePresence expand/collapse, split layout (heading left, questions right)
+- [x] `Footer` — 4-column grid (brand + product/resources/legal link groups) with copyright and license
+- [x] `ForgeFeatures` — updated with icons to match new FeatureCard interface
+
+### Forge Page Polish
+- [x] `ForgeNavbar` — redesigned to match landing page: Settings/Versions/GitHub buttons, mobile hamburger, removed "Get Started"
+- [x] `ForgeGenerator` — compact page header, API key warning banner, Ctrl+Enter hint, refined category buttons, provider toggle grid, better empty state, smoother output transitions, refined toolbar/refine-bar
+- [x] `ForgeVault` — stagger entrance animations, category icons + badges, model badge, faded action buttons on hover, better empty state
+- [x] `ForgeFeatures` — made compact (reduced padding), moved below vault, uses updated FeatureCard with icons
+- [x] `ForgeFooter` — redesigned to match landing footer (brand info, GitHub link, copyright, MIT license)
+- [x] `prompt-forge.tsx` — removed `ForgeHero` section entirely, reordered sections (Navbar → Generator → Vault → Features → Footer), wired `onOpenSettings`/`onOpenVersions`/`hasGeneratedPrompt` to `ForgeNavbar`
+
+### Visual Design Polish
+- [x] Noise overlay (`/noise.svg`) added to forge page root, generator, vault, features, and footer for cohesive texture
+- [x] Ambient amber/orange glow blobs added at page level (matching landing page)
+- [x] `ForgeNavbar` — noise bg, amber underline hover effect on nav links, shadow glow on brand icon, improved mobile menu with dot indicators, hover bg on GitHub icon
+- [x] `ForgeGenerator` — gradient text heading ("The Forge"), staggered entrance animations on control sections, `forge-ember` CSS effect on generate CTA, stronger shadows + hover states on category buttons and provider toggles, improved output panel with terminal icon container, higher dot-grid opacity on hover, larger empty-state terminal icon
+- [x] `ForgeVault` — gradient section heading, card hover lift (-translate-y-0.5 + amber border glow + shadow), better empty state, improved search focus ring, hover bg on action buttons, arrow icon animation on recall, "Load More" button hover state
+- [x] `ForgeFeatures` — upgraded to `gap-px bg-zinc-900/50` pattern matching landing page exactly, border on container, noise bg, gradient heading
+- [x] `ForgeFooter` — full 4-column grid matching landing footer (Product/Resources/Legal + brand), noise overlay, shadow on brand icon, GitHub link in bottom bar
+
+### Forge Hero (Re-added & Improved)
+- [x] `ForgeHero` — completely rewritten with landing-page-quality design: gradient heading ("Engineer every prompt."), "Powered by Gemini, Claude & more" badge, staggered entrance animations, browser chrome mockup showing input/output panels with shimmer skeleton placeholder, ember-effect primary CTA + secondary "Browse Templates" CTA
+- [x] `prompt-forge.tsx` — re-imported `ForgeHero`, placed between Navbar and Generator, wired `onBrowseGallery` to gallery modal
+- [x] `forge-generator.tsx` — reduced `pt-28` to `pt-16` to account for hero above
+
 ## Open Questions
 
 - None currently
 
 ## Next Steps
-- Monitor for any regression after the 9-phase sweep
+- Monitor for any regression after the 9-phase sweep + landing overhaul + forge polish
 - Consider adding memory-safe `AbortController` to Gemini SDK calls (library doesn't expose signal)
 - Evaluate if `showToast` prop types should be broadened to `(message: string, type?: 'success' | 'info') => void` in child components
 
 ## Recent
-- (see Phase 1-9 above)
+- (see Phase 1-9 above + Landing Page Overhaul + Forge Page Polish)

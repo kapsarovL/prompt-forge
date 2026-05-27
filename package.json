@@ -2,13 +2,23 @@
   "name": "prompt-forge",
   "version": "0.1.0",
   "private": true,
+  "description": "A client-side prompt engineering workspace — craft, refine, evaluate, and optimize LLM prompts entirely in the browser.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prismaflux/prompt-forge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prismaflux/prompt-forge/issues"
+  },
+  "homepage": "https://github.com/prismaflux/prompt-forge#readme",
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "format": "prettier --write ",
+    "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -16,6 +26,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.98.0",
     "@google/genai": "^1.46.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",

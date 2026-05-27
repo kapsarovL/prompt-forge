@@ -1,44 +1,71 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, MessageSquare, Menu, X } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, MessageSquare, Settings, History, Menu, X, Github } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface ForgeNavbarProps {
   onOpenFeedback: () => void;
+  onOpenSettings: () => void;
+  onOpenVersions: () => void;
+  hasGeneratedPrompt: boolean;
 }
 
-export function ForgeNavbar({ onOpenFeedback }: ForgeNavbarProps) {
+export function ForgeNavbar({ onOpenFeedback, onOpenSettings, onOpenVersions, hasGeneratedPrompt }: ForgeNavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-black/20 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-black/40 backdrop-blur-xl">
+      <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.08] mix-blend-overlay pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center group-hover:bg-amber-500 transition-colors shadow-[0_0_16px_-4px_rgba(245,158,11,0.2)] group-hover:shadow-[0_0_20px_-4px_rgba(245,158,11,0.4)]">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <span className="text-lg font-semibold tracking-tight text-white">PromptForge</span>
-        </div>
+          <span className="text-sm font-semibold tracking-tight text-white">PromptForge</span>
+        </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
-          <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="#generator" className="hover:text-white transition-colors">Generator</a>
-          <a href="#history" className="hover:text-white transition-colors">History</a>
-          <button onClick={onOpenFeedback} className="hover:text-white transition-colors flex items-center gap-1.5">
-            <MessageSquare className="w-3.5 h-3.5" />
+        <div className="hidden md:flex items-center gap-1 text-xs font-medium text-zinc-400">
+          <a href="#generator" className="px-3 py-2 hover:text-white transition-colors tracking-wider relative group">
+            Generator
+            <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-amber-500/60 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+          </a>
+          <a href="#history" className="px-3 py-2 hover:text-white transition-colors tracking-wider relative group">
+            History
+            <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-amber-500/60 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+          </a>
+          {hasGeneratedPrompt && (
+            <button onClick={onOpenVersions} className="px-3 py-2 hover:text-white transition-colors tracking-wider flex items-center gap-1.5 relative group">
+              <History className="w-3 h-3" />
+              Versions
+              <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-amber-500/60 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+            </button>
+          )}
+          <button onClick={onOpenSettings} className="px-3 py-2 hover:text-white transition-colors tracking-wider flex items-center gap-1.5 relative group">
+            <Settings className="w-3 h-3" />
+            Settings
+            <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-amber-500/60 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+          </button>
+          <button onClick={onOpenFeedback} className="px-3 py-2 hover:text-white transition-colors tracking-wider flex items-center gap-1.5 relative group">
+            <MessageSquare className="w-3 h-3" />
             Feedback
+            <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-amber-500/60 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
           </button>
         </div>
 
-        <div className="flex items-center gap-4">
-          <button
-            className="hidden md:inline-flex px-4 py-1.5 bg-white text-black text-xs font-bold rounded-full hover:bg-zinc-200 transition-all active:scale-95"
-            onClick={() => window.scrollTo({ top: document.getElementById('generator')?.offsetTop || 0, behavior: 'smooth' })}
+        <div className="flex items-center gap-3">
+          <a
+            href="https://github.com/prismaflux/prompt-forge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex p-2 text-zinc-500 hover:text-zinc-300 hover:bg-white/5 rounded-lg transition-all"
+            aria-label="GitHub"
           >
-            Get Started
-          </button>
+            <Github className="w-4 h-4" />
+          </a>
           <button
-            className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
+            className="md:hidden p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
@@ -47,31 +74,48 @@ export function ForgeNavbar({ onOpenFeedback }: ForgeNavbarProps) {
         </div>
       </div>
 
-      {mobileOpen && (
-        <div className="md:hidden border-t border-white/5 bg-zinc-950/95 backdrop-blur-xl">
-          <div className="flex flex-col px-6 py-4 gap-4 text-sm font-medium text-zinc-400">
-            <a href="#features" className="hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>Features</a>
-            <a href="#generator" className="hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>Generator</a>
-            <a href="#history" className="hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>History</a>
-            <button
-              onClick={() => { onOpenFeedback(); setMobileOpen(false); }}
-              className="flex items-center gap-1.5 hover:text-white transition-colors"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              Feedback
-            </button>
-            <button
-              className="mt-2 w-full px-4 py-2 bg-white text-black text-xs font-bold rounded-full hover:bg-zinc-200 transition-all active:scale-95"
-              onClick={() => {
-                window.scrollTo({ top: document.getElementById('generator')?.offsetTop || 0, behavior: 'smooth' });
-                setMobileOpen(false);
-              }}
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="md:hidden border-t border-white/5 bg-zinc-950/95 backdrop-blur-xl"
+          >
+            <div className="flex flex-col px-4 py-3 gap-0.5 text-sm text-zinc-400">
+              <a href="#generator" className="flex items-center gap-3 px-4 py-3 hover:text-white hover:bg-amber-500/5 rounded-xl transition-all" onClick={() => setMobileOpen(false)}>
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                Generator
+              </a>
+              <a href="#history" className="flex items-center gap-3 px-4 py-3 hover:text-white hover:bg-amber-500/5 rounded-xl transition-all" onClick={() => setMobileOpen(false)}>
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                History
+              </a>
+              {hasGeneratedPrompt && (
+                <button onClick={() => { onOpenVersions(); setMobileOpen(false); }} className="flex items-center gap-3 px-4 py-3 hover:text-white hover:bg-amber-500/5 rounded-xl transition-all">
+                  <History className="w-4 h-4 text-zinc-600" /> Versions
+                </button>
+              )}
+              <div className="border-t border-white/5 my-2" />
+              <button onClick={() => { onOpenSettings(); setMobileOpen(false); }} className="flex items-center gap-3 px-4 py-3 hover:text-white hover:bg-amber-500/5 rounded-xl transition-all">
+                <Settings className="w-4 h-4 text-zinc-600" /> Settings
+              </button>
+              <button onClick={() => { onOpenFeedback(); setMobileOpen(false); }} className="flex items-center gap-3 px-4 py-3 hover:text-white hover:bg-amber-500/5 rounded-xl transition-all">
+                <MessageSquare className="w-4 h-4 text-zinc-600" /> Feedback
+              </button>
+              <a
+                href="https://github.com/prismaflux/prompt-forge"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-4 py-3 hover:text-white hover:bg-amber-500/5 rounded-xl transition-all"
+              >
+                <Github className="w-4 h-4 text-zinc-600" /> GitHub
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
