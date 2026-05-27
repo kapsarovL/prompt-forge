@@ -1,21 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-
-      <stop offset="0%" style="stop-color:#1a1a2e"/>
-      <stop offset="100%" style="stop-color:#0f0f1a"/>
+      <stop offset="0%" style="stop-color:#050505"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
     </linearGradient>
     <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.3"/>
-      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:0.1"/>
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:0.05"/>
     </linearGradient>
   </defs>
   <rect width="800" height="400" fill="url(#bg)"/>
   <rect width="800" height="400" fill="url(#glow)"/>
-  
-  <!-- Dots pattern -->
 
-  <g opacity="0.08">
+  <!-- Noise dots -->
+  <g opacity="0.06">
     <circle cx="50" cy="50" r="1" fill="#fff"/>
     <circle cx="150" cy="80" r="1" fill="#fff"/>
     <circle cx="250" cy="40" r="1" fill="#fff"/>
@@ -54,44 +52,36 @@
     <circle cx="760" cy="370" r="1" fill="#fff"/>
   </g>
 
-  <!-- Ring decorations -->
-
-  <circle cx="400" cy="200" r="140" fill="none" stroke="#6366f1" stroke-width="0.5" opacity="0.15"/>
-  <circle cx="400" cy="200" r="120" fill="none" stroke="#6366f1" stroke-width="0.5" opacity="0.1"/>
-  <circle cx="400" cy="200" r="100" fill="none" stroke="#6366f1" stroke-width="0.5" opacity="0.2"/>
+  <!-- Amber glow rings -->
+  <circle cx="400" cy="200" r="140" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.12"/>
+  <circle cx="400" cy="200" r="120" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.08"/>
+  <circle cx="400" cy="200" r="100" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.18"/>
 
   <!-- Title -->
+  <text x="400" y="160" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="68" font-weight="800" fill="#fafafa" letter-spacing="-1">PromptForge</text>
 
-  <text x="400" y="160" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="800" fill="#fafafa" letter-spacing="-1">PromptForge</text>
-  
   <!-- Subtitle -->
+  <text x="400" y="215" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="400" fill="#a1a1aa" letter-spacing="1">AI Prompt Engineering Toolkit</text>
 
-  <text x="400" y="210" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="400" fill="#a1a1aa" letter-spacing="1">AI Prompt Engineering Toolkit</text>
-
-  <!-- Divider -->
-
-  <line x1="300" y1="240" x2="500" y2="240" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+  <!-- Amber divider -->
+  <line x1="320" y1="245" x2="480" y2="245" stroke="#f59e0b" stroke-width="1.5" opacity="0.7"/>
 
   <!-- Tagline -->
-
-  <text x="400" y="280" text-anchor="middle" font-family="system-ui, 
-  -apple-system, sans-serif" font-size="14" font-weight="400" fill="#71717a" letter-spacing="0.5">Client-side only —  No backend  ·  No database  ·  No auth</text>
+  <text x="400" y="285" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#71717a" letter-spacing="0.5">Client-side · No backend · No signup</text>
 
   <!-- Badge row -->
+  <g transform="translate(240, 325)">
+    <rect x="0" y="0" width="80" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="40" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#a1a1aa">Next.js 16</text>
 
-  <g transform="translate(240, 320)">
+    <rect x="90" y="0" width="80" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="130" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#a1a1aa">React 19</text>
 
-    <rect x="0" y="0" width="80" height="26" rx="4" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
-    <text x="40" y="18" text-anchor="middle" font-family="monospace" font-size="11" fill="#a1a1aa">Next.js 16</text>
-    
-    <rect x="90" y="0" width="80" height="26" rx="4" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
-    <text x="130" y="18" text-anchor="middle" font-family="monospace" font-size="11" fill="#a1a1aa">React 19</text>
-    
-    <rect x="180" y="0" width="80" height="26" rx="4" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
-    <text x="220" y="18" text-anchor="middle" font-family="monospace" font-size="11" fill="#a1a1aa">TypeScript</text>
-    
-    <rect x="270" y="0" width="80" height="26" rx="4" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
-    <text x="310" y="18" text-anchor="middle" font-family="monospace" font-size="11" fill="#a1a1aa">Tailwind v4</text>
+    <rect x="180" y="0" width="80" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="220" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#a1a1aa">TypeScript</text>
+
+    <rect x="270" y="0" width="80" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="310" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#a1a1aa">Tailwind v4</text>
   </g>
 </svg>
 
