@@ -8,6 +8,11 @@
       <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.15"/>
       <stop offset="100%" style="stop-color:#ea580c;stop-opacity:0.05"/>
     </linearGradient>
+    <linearGradient id="title-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fef3c7"/>
+      <stop offset="50%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#ea580c"/>
+    </linearGradient>
   </defs>
   <rect width="800" height="400" fill="url(#bg)"/>
   <rect width="800" height="400" fill="url(#glow)"/>
@@ -52,36 +57,55 @@
     <circle cx="760" cy="370" r="1" fill="#fff"/>
   </g>
 
-  <!-- Amber glow rings -->
-  <circle cx="400" cy="200" r="140" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.12"/>
-  <circle cx="400" cy="200" r="120" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.08"/>
-  <circle cx="400" cy="200" r="100" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.18"/>
+  <!-- Ambent glow rings -->
+  <circle cx="400" cy="210" r="160" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.10"/>
+  <circle cx="400" cy="210" r="135" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.07"/>
+  <circle cx="400" cy="210" r="110" fill="none" stroke="#f59e0b" stroke-width="0.5" opacity="0.15"/>
+
+  <!-- Forge logo mark: anvil + spark -->
+  <!-- Anvil body -->
+  <polygon points="378,55 422,55 442,100 358,100" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.7"/>
+  <polygon points="365,100 435,100 415,132 385,132" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.5"/>
+  <rect x="384" y="132" width="32" height="8" rx="2" fill="#f59e0b" opacity="0.35"/>
+
+  <!-- Spark particles -->
+  <circle cx="395" cy="38" r="3" fill="#f59e0b" opacity="0.9"/>
+  <circle cx="408" cy="30" r="2" fill="#ea580c" opacity="0.7"/>
+  <circle cx="415" cy="45" r="1.5" fill="#fbbf24" opacity="0.8"/>
+  <circle cx="388" cy="45" r="1" fill="#ea580c" opacity="0.5"/>
+  <circle cx="405" cy="50" r="1" fill="#f59e0b" opacity="0.4"/>
 
   <!-- Title -->
-  <text x="400" y="160" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="68" font-weight="800" fill="#fafafa" letter-spacing="-1">PromptForge</text>
+  <text x="400" y="175" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="68" font-weight="800" fill="url(#title-grad)" letter-spacing="-1">PromptForge</text>
 
   <!-- Subtitle -->
-  <text x="400" y="215" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="400" fill="#a1a1aa" letter-spacing="1">AI Prompt Engineering Toolkit</text>
+  <text x="400" y="220" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="400" fill="#a1a1aa" letter-spacing="2">AI Prompt Engineering Toolkit</text>
 
-  <!-- Amber divider -->
-  <line x1="320" y1="245" x2="480" y2="245" stroke="#f59e0b" stroke-width="1.5" opacity="0.7"/>
+  <!-- Ambent divider -->
+  <line x1="340" y1="245" x2="460" y2="245" stroke="#f59e0b" stroke-width="1" opacity="0.6"/>
 
   <!-- Tagline -->
-  <text x="400" y="285" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#71717a" letter-spacing="0.5">Client-side · No backend · No signup</text>
+  <text x="400" y="280" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="400" fill="#71717a" letter-spacing="1">No backend · No servers · No signup</text>
 
-  <!-- Badge row -->
-  <g transform="translate(240, 325)">
-    <rect x="0" y="0" width="80" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
-    <text x="40" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#a1a1aa">Next.js 16</text>
+  <!-- Badge row - 6 tech badges -->
+  <g transform="translate(178, 325)">
+    <rect x="0" y="0" width="70" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="35" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#a1a1aa">Next.js 16</text>
 
-    <rect x="90" y="0" width="80" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
-    <text x="130" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#a1a1aa">React 19</text>
+    <rect x="78" y="0" width="70" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="113" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#a1a1aa">React 19</text>
 
-    <rect x="180" y="0" width="80" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
-    <text x="220" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#a1a1aa">TypeScript</text>
+    <rect x="156" y="0" width="75" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="193" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#a1a1aa">TypeScript</text>
 
-    <rect x="270" y="0" width="80" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
-    <text x="310" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#a1a1aa">Tailwind v4</text>
+    <rect x="239" y="0" width="72" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="275" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#a1a1aa">Tailwind v4</text>
+
+    <rect x="319" y="0" width="55" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="347" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#a1a1aa">pnpm</text>
+
+    <rect x="382" y="0" width="63" height="26" rx="13" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="414" y="18" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#a1a1aa">Motion</text>
   </g>
 </svg>
 
@@ -95,14 +119,14 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16.2.3-000?logo=next.js&logoColor=white" alt="Next.js 16"/>
+  <img src="https://img.shields.io/badge/Next.js-16.2.6-000?logo=next.js&logoColor=white" alt="Next.js 16"/>
   <img src="https://img.shields.io/badge/React-19.2.4-61DAFB?logo=react&logoColor=white" alt="React 19"/>
   <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white" alt="TypeScript"/>
   <img src="https://img.shields.io/badge/node-%3E%3D22-green?logo=node.js&logoColor=white" alt="Node >=22"/>
   <img src="https://img.shields.io/badge/pnpm-latest-F69220?logo=pnpm&logoColor=white" alt="pnpm"/>
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"/>
   <br/>
-  <img src="https://github.com/prismaflux/prompt-forge/actions/workflows/ci.yml/badge.svg" alt="CI"/>
+  <img src="https://github.com/kapsarovL/prompt-forge/actions/workflows/ci.yml/badge.svg" alt="CI"/>
 </p>
 
 ---
@@ -129,34 +153,40 @@ Built for developers, content creators, and analysts who want precision over gue
 <details open>
 <summary><strong>Prompt Generation</strong> — Convert natural language intent into structured prompts</summary>
 
+Describe what you want in plain language, select a category, choose a model, and let AI forge a polished, production-ready prompt. Supports Gemini, Anthropic Claude, OpenCode, and OpenAI Codex providers.
+
 </details>
 
 <details open>
 <summary><strong>Smart Enhance</strong> — One-click improvement of your intent description before generation</summary>
+
+Not sure how to phrase your intent? Hit the wand icon to let AI rewrite your description with more clarity and detail before generation — giving the prompt engine better material to work with.
 
 </details>
 
 <details open>
 <summary><strong>Refinement</strong> — Iterative prompt polishing via natural language instructions</summary>
 
+Already have a prompt but want to tweak it? Use the refine panel to give natural language instructions ("make it more concise", "add error handling examples") and the output updates in place without starting over.
+
 </details>
 
 ### Evaluation & Improvement
 
-- **Deep Evaluation** — AI-driven assessment across 3 criteria: clarity, specificity, misinterpretation risk
-- **Auto-Fix** — Automatically applies evaluation suggestions to improve the prompt
+- **Deep Evaluation** — AI-driven assessment scoring every prompt across 3 criteria: clarity, specificity, and misinterpretation risk, with detailed breakdowns
+- **Auto-Fix** — Automatically applies evaluation suggestions to improve the prompt, then saves the optimized version to history
 
 ### Management & Organization
 
-- **History Vault** — Searchable generation history (50 items) with one-click recall
-- **Version Control** — Automatic snapshots of every generation (20 items)
-- **Template Gallery** — 12 built-in templates across 4 categories + user-saved custom templates
-- **Copy & Export** — Direct clipboard copy and text file download
+- **History Vault** — Searchable generation history (50 items) with one-click recall, category/model filtering, and bulk clear
+- **Version Control** — Automatic snapshots of every generation (20 items), accessible via the Versions panel for rollback
+- **Template Gallery** — 12 built-in templates across 4 categories (Coding, Creative, Analysis, General) + user-saved custom templates with search and filtering
+- **Copy & Export** — Direct clipboard copy or text file download with auto-named files
 
 ### Configuration
 
-- **Dual-Provider Settings** — Independent API key management for Gemini and OpenCode
-- **Model Selection** — Per-provider dropdown for model choice
+- **Multi-Provider Settings** — Independent API key management for Gemini, Anthropic Claude, OpenCode, and OpenAI Codex
+- **Model Selection** — Per-provider model dropdowns with appropriate model choices
 - **OpenCode Base URL** — Configurable endpoint for self-hosted or alternate API targets
 
 ---
@@ -165,19 +195,21 @@ Built for developers, content creators, and analysts who want precision over gue
 
 | Layer | Technology |
 |-------|------------|
-| Framework | [Next.js 16.2.3](https://nextjs.org/) (App Router) |
+| Framework | [Next.js 16.2.6](https://nextjs.org/) (App Router) |
 | UI Library | [React 19.2.4](https://react.dev/) |
 | Language | [TypeScript 5](https://www.typescriptlang.org/) (strict mode) |
-| Styling | [Tailwind CSS v4](https://tailwindcss.com/) + tw-animate-css |
-| Animations | [Motion 12.38.0](https://motion.dev/) (Framer Motion) |
+| Styling | [Tailwind CSS v4](https://tailwindcss.com/) + [tw-animate-css](https://github.com/tw-in-js/tw-animate-css) |
+| Animations | [Motion 12.38.0](https://motion.dev/) |
 | Icons | [Lucide React 0.577.0](https://lucide.dev/) |
-| AI: Gemini | [@google/genai 1.46.0](https://github.com/google-gemini/generative-ai-js) (SDK) |
-| AI: OpenCode | Raw `fetch` (OpenAI-compatible API) |
-| Persistence | Web localStorage API |
+| AI: Gemini | [@google/genai](https://github.com/google-gemini/generative-ai-js) (official SDK) |
+| AI: Anthropic | [@anthropic-ai/sdk](https://github.com/anthropics/anthropic-sdk-typescript) (official SDK) |
+| AI: OpenCode | Native `fetch` (OpenAI-compatible API) |
+| AI: Codex | Native `fetch` (OpenAI-compatible API) |
+| Persistence | Web [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) API |
 | Package Manager | [pnpm](https://pnpm.io/) |
-| CI | [GitHub Actions](https://github.com/features/actions) (lint + build) |
-| Formatting | [Prettier](https://prettier.io/) + prettier-plugin-tailwindcss |
-| Linting | [ESLint 9](https://eslint.org/) flat config (next/core-web-vitals) |
+| CI | [GitHub Actions](https://github.com/features/actions) (lint → test → build) |
+| Formatting | [Prettier](https://prettier.io/) + [prettier-plugin-tailwindcss](https://github.com/tailwindlabs/prettier-plugin-tailwindcss) |
+| Linting | [ESLint 9](https://eslint.org/) flat config · `next/core-web-vitals` |
 
 ---
 
@@ -257,7 +289,12 @@ pnpm start
 #### Gemini
 1. Get an API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. Enter it in Settings → Google Gemini
-3. or set `NEXT_PUBLIC_GEMINI_API_KEY` in `.env.local`
+3. Or set `NEXT_PUBLIC_GEMINI_API_KEY` in `.env.local`
+
+#### Anthropic (Claude)
+1. Get an API key from [Anthropic Console](https://console.anthropic.com/)
+2. Enter it in Settings → Anthropic
+3. Select your preferred Claude model
 
 #### OpenCode
 1. Obtain an API key from your OpenCode provider
@@ -265,6 +302,11 @@ pnpm start
 3. Optionally change the model or base URL
 4. Default model: `opencode/big-pickle`
 5. Default base URL: `https://opencode.ai/zen/v1`
+
+#### OpenAI Codex
+1. Get an API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Enter it in Settings → Codex
+3. Select your preferred Codex model
 
 ---
 
@@ -313,10 +355,14 @@ All user data is stored in browser **localStorage**. Clearing browser data will 
 | Key | Type | Description |
 |-----|------|-------------|
 | `promptforge_api_key` | `string` | Gemini API key |
+| `pf_anthropic_key` | `string` | Anthropic API key |
+| `pf_anthropic_model` | `string` | Anthropic model ID |
+| `pf_codex_key` | `string` | Codex API key |
+| `pf_codex_model` | `string` | Codex model ID |
 | `promptforge_opencode_api_key` | `string` | OpenCode API key |
 | `promptforge_opencode_model` | `string` | OpenCode model ID |
 | `promptforge_opencode_base_url` | `string` | OpenCode base URL |
-| `promptforge_provider` | `"gemini" \| "opencode"` | Active provider |
+| `promptforge_provider` | `"gemini" \| "opencode" \| "anthropic" \| "codex"` | Active provider |
 | `promptforge_history` | `PromptHistory[]` | Generation history (max 50) |
 | `promptforge_versions` | `PromptVersion[]` | Version snapshots (max 20) |
 | `promptforge_custom_templates` | `Record<string, string[]>` | Saved templates |
