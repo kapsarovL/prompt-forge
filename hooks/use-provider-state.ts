@@ -23,83 +23,52 @@ import { isEncryptionActive, initEncryption, decryptAllKeys, clearEncryption } f
  * passphrase is held in memory only (never persisted).
  */
 export function useProviderState() {
-  const [provider, setProvider] = useState<Provider>("gemini");
-
-  // Encryption state
+  // Encryption state — initialized lazily from localStorage
   const [passphrase, setPassphrase] = useState<string | null>(null);
-  const [isEncryptionLocked, setIsEncryptionLocked] = useState(false);
+  const [isEncryptionLocked, setIsEncryptionLocked] = useState(isEncryptionActive);
 
-  // Gemini
-  const [geminiKey, setGeminiKey] = useState<string | null>(null);
+  // Gemini — only load from plaintext localStorage if encryption is not active
+  const [geminiKey, setGeminiKey] = useState<string | null>(() => {
+    if (isEncryptionActive()) return null;
+    return getStorageString(STORAGE_KEYS.GEMINI_KEY, "") || null;
+  });
 
   // OpenCode
-  const [opencodeKey, setOpencodeKey] = useState<string | null>(null);
-  const [opencodeModel, setOpencodeModel] = useState(OPENCODE_DEFAULT_MODEL);
-  const [opencodeBaseUrl, setOpencodeBaseUrl] = useState(OPENCODE_DEFAULT_BASE_URL);
+  const [opencodeKey, setOpencodeKey] = useState<string | null>(() => {
+    if (isEncryptionActive()) return null;
+    return getStorageString(STORAGE_KEYS.OPENCODE_KEY, "") || null;
+  });
+  const [opencodeModel, setOpencodeModel] = useState(() =>
+    getStorageString(STORAGE_KEYS.OPENCODE_MODEL, OPENCODE_DEFAULT_MODEL),
+  );
+  const [opencodeBaseUrl, setOpencodeBaseUrl] = useState(() =>
+    getStorageString(STORAGE_KEYS.OPENCODE_BASE_URL, OPENCODE_DEFAULT_BASE_URL),
+  );
 
   // Anthropic
-  const [anthropicKey, setAnthropicKeyState] = useState<string | null>(null);
-  const [anthropicModel, setAnthropicModelState] = useState(ANTHROPIC_MODELS[0].id);
+  const [anthropicKey, setAnthropicKeyState] = useState<string | null>(() => {
+    if (isEncryptionActive()) return null;
+    return getStorageString(STORAGE_KEYS.ANTHROPIC_KEY, "") || null;
+  });
+  const [anthropicModel, setAnthropicModelState] = useState(() =>
+    getStorageString(STORAGE_KEYS.ANTHROPIC_MODEL, ANTHROPIC_MODELS[0].id),
+  );
 
   // Codex
-  const [codexKey, setCodexKeyState] = useState<string | null>(null);
-  const [codexModel, setCodexModelState] = useState(CODEX_MODELS[0].id);
+  const [codexKey, setCodexKeyState] = useState<string | null>(() => {
+    if (isEncryptionActive()) return null;
+    return getStorageString(STORAGE_KEYS.CODEX_KEY, "") || null;
+  });
+  const [codexModel, setCodexModelState] = useState(() =>
+    getStorageString(STORAGE_KEYS.CODEX_MODEL, CODEX_MODELS[0].id),
+  );
 
-  // Load persisted state on mount
-  useEffect(() => {
-    // Check if encryption is active — if so, don't load plaintext keys
-    if (isEncryptionActive()) {
-      setIsEncryptionLocked(true);
-      // Models and base URLs are not sensitive, load them normally
-      const savedModel = getStorageString(STORAGE_KEYS.OPENCODE_MODEL, OPENCODE_DEFAULT_MODEL);
-      if (savedModel) setOpencodeModel(savedModel);
-
-      const savedBaseUrl = getStorageString(STORAGE_KEYS.OPENCODE_BASE_URL, OPENCODE_DEFAULT_BASE_URL);
-      if (savedBaseUrl) setOpencodeBaseUrl(savedBaseUrl);
-
-      const savedAnthropicModel = getStorageString(STORAGE_KEYS.ANTHROPIC_MODEL, ANTHROPIC_MODELS[0].id);
-      if (savedAnthropicModel) setAnthropicModelState(savedAnthropicModel);
-
-      const savedCodexModel = getStorageString(STORAGE_KEYS.CODEX_MODEL, CODEX_MODELS[0].id);
-      if (savedCodexModel) setCodexModelState(savedCodexModel);
-
-      const savedProvider = getStorageString(STORAGE_KEYS.PROVIDER, "gemini") as Provider;
-      if (savedProvider === "gemini" || savedProvider === "opencode" || savedProvider === "anthropic" || savedProvider === "codex") {
-        setProvider(savedProvider);
-      }
-      return;
-    }
-
-    // No encryption: load keys from plaintext localStorage
-    const savedKey = getStorageString(STORAGE_KEYS.GEMINI_KEY, "");
-    if (savedKey) setGeminiKey(savedKey);
-
-    const savedOpenKey = getStorageString(STORAGE_KEYS.OPENCODE_KEY, "");
-    if (savedOpenKey) setOpencodeKey(savedOpenKey);
-
-    const savedModel = getStorageString(STORAGE_KEYS.OPENCODE_MODEL, OPENCODE_DEFAULT_MODEL);
-    if (savedModel) setOpencodeModel(savedModel);
-
-    const savedBaseUrl = getStorageString(STORAGE_KEYS.OPENCODE_BASE_URL, OPENCODE_DEFAULT_BASE_URL);
-    if (savedBaseUrl) setOpencodeBaseUrl(savedBaseUrl);
-
-    const savedAnthropicKey = getStorageString(STORAGE_KEYS.ANTHROPIC_KEY, "");
-    if (savedAnthropicKey) setAnthropicKeyState(savedAnthropicKey);
-
-    const savedAnthropicModel = getStorageString(STORAGE_KEYS.ANTHROPIC_MODEL, ANTHROPIC_MODELS[0].id);
-    if (savedAnthropicModel) setAnthropicModelState(savedAnthropicModel);
-
-    const savedCodexKey = getStorageString(STORAGE_KEYS.CODEX_KEY, "");
-    if (savedCodexKey) setCodexKeyState(savedCodexKey);
-
-    const savedCodexModel = getStorageString(STORAGE_KEYS.CODEX_MODEL, CODEX_MODELS[0].id);
-    if (savedCodexModel) setCodexModelState(savedCodexModel);
-
-    const savedProvider = getStorageString(STORAGE_KEYS.PROVIDER, "gemini") as Provider;
-    if (savedProvider === "gemini" || savedProvider === "opencode" || savedProvider === "anthropic" || savedProvider === "codex") {
-      setProvider(savedProvider);
-    }
-  }, []);
+  // Provider preference
+  const [provider, setProvider] = useState<Provider>(() => {
+    const saved = getStorageString(STORAGE_KEYS.PROVIDER, "gemini");
+    if (saved === "gemini" || saved === "opencode" || saved === "anthropic" || saved === "codex") return saved;
+    return "gemini";
+  });
 
   // Persist provider preference
   useEffect(() => {

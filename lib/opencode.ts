@@ -210,7 +210,6 @@ export async function openCodeGenerateWithRetry(
     } catch (err) {
       lastError = err;
       // Retry on HTTP 503 AND network errors (TypeError → wrapped as Error)
-      const error = err as Error;
       const isRetryable =
         // HTTP 503 from the API
         (err as { status?: number })?.status === 503 ||

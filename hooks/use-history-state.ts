@@ -13,25 +13,19 @@ const MAX_VERSIONS = 20;
  * with localStorage persistence.
  */
 export function useHistoryState() {
-  const [history, setHistory] = useState<PromptHistory[]>([]);
+  const [history, setHistory] = useState<PromptHistory[]>(() =>
+    getStorageItem<PromptHistory[]>(STORAGE_KEYS.HISTORY, []),
+  );
   const [historySearch, setHistorySearch] = useState("");
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(6);
 
-  const [versions, setVersions] = useState<PromptVersion[]>([]);
+  const [versions, setVersions] = useState<PromptVersion[]>(() =>
+    getStorageItem<PromptVersion[]>(STORAGE_KEYS.VERSIONS, []),
+  );
 
-  const [customTemplates, setCustomTemplates] = useState<Record<string, string[]>>({});
-
-  // Load persisted state on mount
-  useEffect(() => {
-    const savedHistory = getStorageItem<PromptHistory[]>(STORAGE_KEYS.HISTORY, []);
-    setHistory(savedHistory);
-
-    const savedTemplates = getStorageItem<Record<string, string[]>>(STORAGE_KEYS.CUSTOM_TEMPLATES, {});
-    setCustomTemplates(savedTemplates);
-
-    const savedVersions = getStorageItem<PromptVersion[]>(STORAGE_KEYS.VERSIONS, []);
-    setVersions(savedVersions);
-  }, []);
+  const [customTemplates, setCustomTemplates] = useState<Record<string, string[]>>(() =>
+    getStorageItem<Record<string, string[]>>(STORAGE_KEYS.CUSTOM_TEMPLATES, {}),
+  );
 
   // Persist on change
   useEffect(() => {
