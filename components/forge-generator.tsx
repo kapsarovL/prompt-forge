@@ -52,6 +52,10 @@ interface ForgeGeneratorProps {
   setProvider: (p: Provider) => void;
   opencodeModel: string;
   onSetOpencodeModel: (model: string) => void;
+  anthropicModel?: string;
+  onSetAnthropicModel?: (model: string) => void;
+  codexModel?: string;
+  onSetCodexModel?: (model: string) => void;
   onOpenVersions: () => void;
   onOpenGallery?: () => void;
 }
@@ -89,6 +93,8 @@ export function ForgeGenerator(props: ForgeGeneratorProps) {
     categories, models,
     provider, setProvider,
     opencodeModel, onSetOpencodeModel,
+    anthropicModel, onSetAnthropicModel,
+    codexModel, onSetCodexModel,
     onOpenVersions, onOpenGallery,
   } = props;
 
@@ -279,20 +285,31 @@ export function ForgeGenerator(props: ForgeGeneratorProps) {
                 className="space-y-4"
               >
                 <label htmlFor="model" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Model</label>
-                <div className="relative">
+                <div className="relative group/dropdown">
                   <select
                     id="model"
-                    value={provider === "opencode" ? opencodeModel : model}
-                    onChange={(e) =>
-                      provider === "opencode"
-                        ? onSetOpencodeModel(e.target.value)
-                        : setModel(e.target.value)
-                    }
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-zinc-300 appearance-none focus:outline-none focus:border-amber-500/50 transition-all cursor-pointer"
+                    value={provider === "opencode" ? opencodeModel : provider === "anthropic" && anthropicModel ? anthropicModel : provider === "codex" && codexModel ? codexModel : model}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (provider === "opencode") {
+                        onSetOpencodeModel(val);
+                      } else if (provider === "anthropic" && onSetAnthropicModel) {
+                        onSetAnthropicModel(val);
+                      } else if (provider === "codex" && onSetCodexModel) {
+                        onSetCodexModel(val);
+                      } else {
+                        setModel(val);
+                      }
+                    }}
+                    className="w-full bg-gradient-to-b from-zinc-800/60 to-black/40 border border-white/10 rounded-xl px-4 py-3 pr-10 text-xs text-zinc-200 appearance-none focus:outline-none focus:border-amber-500/50 focus:shadow-[0_0_20px_-10px_rgba(245,158,11,0.3)] hover:border-white/20 transition-all cursor-pointer"
                   >
-                    {models.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+                    {models.map(m => (
+                      <option key={m.id} value={m.id} className="bg-zinc-900 text-zinc-200">{m.label}</option>
+                    ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none transition-colors duration-200 group-focus-within/dropdown:text-amber-400 text-zinc-600">
+                    <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover/dropdown:scale-110" />
+                  </div>
                 </div>
               </motion.div>
 

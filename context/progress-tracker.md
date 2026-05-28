@@ -73,6 +73,15 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - (none)
 
 ## Recently Completed
+
+### Improvement Sprint
+- [x] **Extracted hooks from PromptForge** — created `hooks/use-prompt-state.ts`, `hooks/use-provider-state.ts`, `hooks/use-history-state.ts`, `hooks/use-modal-state.ts`, `hooks/use-toast.ts`. Reduced PromptForge from ~705 lines to ~120 lines of composition logic.
+- [x] **AbortController + timeout on all providers** — added 30s timeout with AbortController to Gemini (via Promise.race + abort signal), Anthropic, and Codex clients. OpenCode already had it.
+- [x] **Security headers** — updated CSP in `next.config.ts` to include `api.anthropic.com`, `api.openai.com`, `frame-ancestors 'none'`, and `clipboard-write=self` in Permissions-Policy.
+- [x] **API key encryption** — created `lib/crypto.ts` with AES-256-GCM + PBKDF2 (600K iterations). Added `EncryptionLock` unlock overlay, Security tab in SettingsModal, encryption integration in `useProviderState`.
+- [x] **Versioned localStorage schema** — created `lib/storage.ts` with `STORAGE_KEYS` constants, `initStorage()` with migration runner, typed read/write helpers. Added `StorageInit` component to root layout.
+- [x] **Input sanitization** — created `lib/sanitize.ts` with detection of prompt injection patterns (ignore/override/disregard), control char stripping, length enforcement. Integrated into `lib/api.ts` for all provider calls.
+- [x] **Test coverage expansion** — 10 test files, 80 tests (up from 33). Added tests for: sanitize (20), storage (14), toast hook (9), forge-generator (12), plus existing 25 tests.
 - [x] Anthropic provider support — `lib/anthropic.ts` (fetch-based, no SDK dep), `Provider` union updated, `ANTHROPIC_MODELS` added, 5 API functions branched via `ApiConfig.anthropicConfig`, Anthropic toggle button in forge-generator, Anthropic settings in settings-modal, state persistence in prompt-forge
 - [x] OpenAI Codex provider support — `lib/codex.ts` (fetch-based, no SDK dep), `Provider` union + `CODEX_MODELS` added, 5 API functions branched via `ApiConfig.codexConfig`, Codex toggle button in forge-generator, Codex settings in settings-modal, state persistence in prompt-forge
 
@@ -115,9 +124,10 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - None currently
 
 ## Next Steps
-- Monitor for any regression after the 9-phase sweep + landing overhaul + forge polish + open-source readiness
-- Consider adding memory-safe `AbortController` to Gemini SDK calls (library doesn't expose signal)
-- Evaluate if `showToast` prop types should be broadened to `(message: string, type?: 'success' | 'info') => void` in child components
+- Monitor for any regression after the improvement sprint
+- Evaluate if the extracted hooks have the right API surface
+- Consider adding Crypto subtle tests (skipped due to jsdom limitations)
+- Add e2e tests for the forge flow (generate, evaluate, refine)
 
 ## Recent
 

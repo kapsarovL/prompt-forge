@@ -35,7 +35,7 @@ describe("getErrorMessage", () => {
   it("returns friendly message for 429 status", () => {
     const err = { status: 429, message: "Too Many Requests" };
     expect(getErrorMessage(err)).toBe(
-      "API quota exceeded. Please check your Gemini API key and billing, or try a different model.",
+      "API quota exceeded. Please check your API key and billing, or try a different model.",
     );
   });
 

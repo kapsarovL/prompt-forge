@@ -4,6 +4,7 @@ import { getApiKey, createClient, generateWithRetry } from "@/lib/gemini";
 import { getOpenCodeConfig, openCodeGenerateWithRetry, openCodeEvaluate } from "@/lib/opencode";
 import { getAnthropicKey, getAnthropicModel, generateWithAnthropic, evaluateWithAnthropic } from "@/lib/anthropic";
 import { getCodexKey, getCodexModel, generateWithCodex, evaluateWithCodex } from "@/lib/codex";
+import { sanitizeDescription, sanitizeRefine, sanitizeEvaluation } from "@/lib/sanitize";
 
 export interface ApiConfig {
   provider: Provider;
@@ -73,7 +74,11 @@ export async function generatePrompt(
   description: string,
   category: string,
   config: ApiConfig,
+  signal?: AbortSignal,
 ): Promise<string> {
+  // Sanitize user input before sending to AI
+  const safeDescription = sanitizeDescription(description).text;
+
   if (config.provider === "anthropic") {
     const cfg = resolveAnthropicConfig(config.anthropicConfig);
     if (!cfg) {
@@ -82,8 +87,9 @@ export async function generatePrompt(
     const text = await generateWithAnthropic(
       cfg.apiKey,
       SYSTEM_PROMPT,
-      [{ role: "user", content: `Category: ${category}\nDescription: ${description}` }],
+      [{ role: "user", content: `Category: ${category}\nDescription: ${safeDescription}` }],
       { model: cfg.model, temperature: 0.7 },
+      signal,
     );
     return text;
   }
@@ -94,8 +100,9 @@ export async function generatePrompt(
     const text = await generateWithCodex(
       cfg.apiKey,
       SYSTEM_PROMPT,
-      [{ role: "user", content: `Category: ${category}\nDescription: ${description}` }],
+      [{ role: "user", content: `Category: ${category}\nDescription: ${safeDescription}` }],
       { model: cfg.model, temperature: 0.7 },
+      signal,
     );
     return text;
   }
@@ -106,7 +113,7 @@ export async function generatePrompt(
       throw new Error("OpenCode API key is missing. Click Settings to add your API key.");
     }
     const text = await openCodeGenerateWithRetry(cfg, [
-      { role: "user", content: `Category: ${category}\nDescription: ${description}` },
+      { role: "user", content: `Category: ${category}\nDescription: ${safeDescription}` },
     ], { systemInstruction: SYSTEM_PROMPT, temperature: 0.7 });
     if (!text) throw new Error("No response generated from the model.");
     return text;
@@ -119,9 +126,9 @@ export async function generatePrompt(
   const ai = createClient(apiKey);
   const text = await generateWithRetry(ai, {
     model: config.geminiModel || "gemini-2.5-flash",
-    contents: `Category: ${category}\nDescription: ${description}`,
+    contents: `Category: ${category}\nDescription: ${safeDescription}`,
     config: { systemInstruction: SYSTEM_PROMPT, temperature: 0.7 },
-  });
+  }, 3, signal);
   if (!text) throw new Error("No response generated from the model.");
   return text;
 }
@@ -130,8 +137,11 @@ export async function refinePrompt(
   originalPrompt: string,
   instruction: string,
   config: ApiConfig,
+  signal?: AbortSignal,
 ): Promise<string> {
-  const content = `Original Prompt:\n${originalPrompt}\n\nInstruction:\n${instruction}`;
+  // Sanitize refine instruction before sending
+  const safeInstruction = sanitizeRefine(instruction).text;
+  const content = `Original Prompt:\n${originalPrompt}\n\nInstruction:\n${safeInstruction}`;
 
   if (config.provider === "anthropic") {
     const cfg = resolveAnthropicConfig(config.anthropicConfig);
@@ -142,6 +152,7 @@ export async function refinePrompt(
       "You are an expert prompt editor. Modify the provided prompt strictly according to the user's instruction. Return ONLY the updated prompt text. Do not include markdown formatting. Do not include explanations.",
       [{ role: "user", content }],
       { model: cfg.model, temperature: 0.4 },
+      signal,
     );
     return text;
   }
@@ -155,6 +166,7 @@ export async function refinePrompt(
       "You are an expert prompt editor. Modify the provided prompt strictly according to the user's instruction. Return ONLY the updated prompt text. Do not include markdown formatting. Do not include explanations.",
       [{ role: "user", content }],
       { model: cfg.model, temperature: 0.4 },
+      signal,
     );
     return text;
   }
@@ -184,7 +196,7 @@ export async function refinePrompt(
         "You are an expert prompt editor. Modify the provided prompt strictly according to the user's instruction. Return ONLY the updated prompt text. Do not include markdown formatting like ```markdown unless it is part of the prompt itself. Do not include explanations.",
       temperature: 0.4,
     },
-  });
+  }, 3, signal);
   if (!text) throw new Error("No response from refinement.");
   return text;
 }
@@ -192,7 +204,11 @@ export async function refinePrompt(
 export async function smartEnhance(
   description: string,
   config: ApiConfig,
+  signal?: AbortSignal,
 ): Promise<string> {
+  // Sanitize description before sending to AI
+  const safeDescription = sanitizeDescription(description).text;
+
   if (config.provider === "anthropic") {
     const cfg = resolveAnthropicConfig(config.anthropicConfig);
     if (!cfg) throw new Error("Anthropic API key missing");
@@ -200,8 +216,9 @@ export async function smartEnhance(
     const text = await generateWithAnthropic(
       cfg.apiKey,
       "You are a writing assistant. Expand vague descriptions into clear, detailed instructions. Return ONLY the enhanced text.",
-      [{ role: "user", content: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${description}"` }],
+      [{ role: "user", content: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${safeDescription}"` }],
       { model: cfg.model, temperature: 0.7, maxTokens: 200 },
+      signal,
     );
     return text;
   }
@@ -213,8 +230,9 @@ export async function smartEnhance(
     const text = await generateWithCodex(
       cfg.apiKey,
       "You are a writing assistant. Expand vague descriptions into clear, detailed instructions. Return ONLY the enhanced text.",
-      [{ role: "user", content: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${description}"` }],
+      [{ role: "user", content: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${safeDescription}"` }],
       { model: cfg.model, temperature: 0.7, maxTokens: 200 },
+      signal,
     );
     return text;
   }
@@ -228,7 +246,7 @@ export async function smartEnhance(
       [
         {
           role: "user",
-          content: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${description}"`,
+          content: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${safeDescription}"`,
         },
       ],
       {
@@ -248,13 +266,13 @@ export async function smartEnhance(
   const ai = createClient(apiKey);
   const text = await generateWithRetry(ai, {
     model: "gemini-2.5-flash-lite",
-    contents: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${description}"`,
+    contents: `Enhance this short prompt description to be more detailed and clear for a prompt engineer. Keep it under 200 characters. Original: "${safeDescription}"`,
     config: {
       systemInstruction:
         "You are a writing assistant. Expand vague descriptions into clear, detailed instructions. Return ONLY the enhanced text.",
       temperature: 0.7,
     },
-  });
+  }, 3, signal);
   if (!text) throw new Error("Enhancement failed.");
   return text;
 }
@@ -262,17 +280,22 @@ export async function smartEnhance(
 export async function evaluatePrompt(
   prompt: string,
   config: ApiConfig,
+  signal?: AbortSignal,
 ): Promise<EvaluationData> {
+  // Sanitize prompt before evaluation
+  const safePrompt = sanitizeEvaluation(prompt).text;
+
   if (config.provider === "anthropic") {
     const cfg = resolveAnthropicConfig(config.anthropicConfig);
     if (!cfg) throw new Error("Anthropic API key is missing.");
 
     const raw = await evaluateWithAnthropic(
-      prompt,
+      safePrompt,
       "You are a Prompt Quality Evaluator. Analyze the provided prompt based on three key criteria: Clarity, Specificity, and Misinterpretation Risk. Return ONLY valid JSON with no markdown wrapping, no code fences, no preamble.",
       "Provide a JSON object with these fields: rating (number 1-10), criteria (object with clarity, specificity, misinterpretationRisk, each 1-10), strengths (string array), weaknesses (string array), suggestions (string array). Return ONLY the JSON object.",
       cfg.apiKey,
       cfg.model,
+      signal,
     );
     if (!raw) throw new Error("Could not evaluate the prompt.");
     const cleaned = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
@@ -288,11 +311,12 @@ export async function evaluatePrompt(
     if (!cfg) throw new Error("OpenAI API key is missing.");
 
     const raw = await evaluateWithCodex(
-      prompt,
+      safePrompt,
       "You are a Prompt Quality Evaluator. Analyze the provided prompt based on three key criteria: Clarity, Specificity, and Misinterpretation Risk. Return ONLY valid JSON with no markdown wrapping, no code fences, no preamble.",
       "Provide a JSON object with these fields: rating (number 1-10), criteria (object with clarity, specificity, misinterpretationRisk, each 1-10), strengths (string array), weaknesses (string array), suggestions (string array). Return ONLY the JSON object.",
       cfg.apiKey,
       cfg.model,
+      signal,
     );
     if (!raw) throw new Error("Could not evaluate the prompt.");
     const cleaned = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
@@ -307,7 +331,7 @@ export async function evaluatePrompt(
     const cfg = resolveOpenCodeConfig(config.opencodeConfig);
     if (!cfg) throw new Error("OpenCode API key is missing.");
 
-    const raw = await openCodeEvaluate(cfg, prompt);
+    const raw = await openCodeEvaluate(cfg, safePrompt);
     if (!raw) throw new Error("Could not evaluate the prompt.");
     try {
       return JSON.parse(raw) as EvaluationData;
@@ -322,7 +346,7 @@ export async function evaluatePrompt(
   const ai = createClient(apiKey);
   const response = await ai.models.generateContent({
     model: config.geminiModel || "gemini-2.5-flash",
-    contents: `Evaluate this prompt for a Gemini model:\n\n${prompt}`,
+    contents: `Evaluate this prompt for a Gemini model:\n\n${safePrompt}`,
     config: {
       systemInstruction: `You are a Prompt Quality Evaluator specializing in Google Gemini models.
 Your job is to analyze the provided prompt based on three key criteria:
@@ -370,6 +394,7 @@ export async function autoFixPrompt(
   prompt: string,
   evaluation: EvaluationData,
   config: ApiConfig,
+  signal?: AbortSignal,
 ): Promise<string> {
   const weaknesses = evaluation.weaknesses.join("\n");
   const suggestions = evaluation.suggestions.join("\n");
@@ -384,6 +409,7 @@ export async function autoFixPrompt(
       "You are an expert prompt engineer. Rewrite the provided prompt to address all identified weaknesses and incorporate all suggestions. Return ONLY the improved prompt text.",
       [{ role: "user", content }],
       { model: cfg.model, temperature: 0.4 },
+      signal,
     );
     return text;
   }
@@ -397,6 +423,7 @@ export async function autoFixPrompt(
       "You are an expert prompt engineer. Rewrite the provided prompt to address all identified weaknesses and incorporate all suggestions. Return ONLY the improved prompt text.",
       [{ role: "user", content }],
       { model: cfg.model, temperature: 0.4 },
+      signal,
     );
     return text;
   }
@@ -426,7 +453,7 @@ export async function autoFixPrompt(
         "You are an expert prompt engineer. Rewrite the provided prompt to address all identified weaknesses and incorporate all suggestions. Return ONLY the improved prompt text.",
       temperature: 0.4,
     },
-  });
+  }, 3, signal);
   if (!text) throw new Error("Auto-fix failed.");
   return text;
 }

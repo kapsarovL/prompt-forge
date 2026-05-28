@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Key, Eye, EyeOff, CheckCircle2, AlertTriangle, Loader2, Trash2, Cpu, Globe, Bot } from "lucide-react";
+import { X, Key, Eye, EyeOff, CheckCircle2, AlertTriangle, Loader2, Trash2, Cpu, Globe, Bot, Shield, ShieldOff, Lock } from "lucide-react";
 import { OPENCODE_DEFAULT_BASE_URL } from "@/lib/opencode";
 import { useModal } from "@/hooks/use-modal";
 
-type ProviderTab = "gemini" | "opencode" | "anthropic" | "codex";
+type SettingsTab = "gemini" | "opencode" | "anthropic" | "codex" | "security";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ interface SettingsModalProps {
   onSaveGeminiKey: (key: string) => Promise<boolean>;
   onClearGeminiKey: () => void;
   hasGeminiKey: boolean;
-  onSaveOpenCodeKey: (key: string) => Promise<boolean>;
+  onSaveOpenCodeKey: (key: string, modelOverride?: string, baseUrlOverride?: string) => Promise<{ success: boolean; validation?: { valid: boolean; status?: number; error?: string } }>;
   onClearOpenCodeKey: () => void;
   hasOpenCodeKey: boolean;
   opencodeModel: string;
@@ -31,20 +31,26 @@ interface SettingsModalProps {
   hasCodexKey: boolean;
   codexModel: string;
   onSetCodexModel: (model: string) => void;
+  // Encryption
+  isEncryptionActive: boolean;
+  onEnableEncryption: (passphrase: string) => Promise<boolean>;
+  onDisableEncryption: () => void;
 }
 
-const PROVIDER_TABS: { id: ProviderTab; label: string; icon: typeof Key }[] = [
+const PROVIDER_TABS: { id: SettingsTab; label: string; icon: typeof Key | typeof Shield }[] = [
   { id: "gemini", label: "Gemini", icon: Cpu },
   { id: "opencode", label: "OpenCode", icon: Bot },
   { id: "anthropic", label: "Anthropic", icon: Cpu },
   { id: "codex", label: "Codex", icon: Bot },
+  { id: "security", label: "Security", icon: Shield },
 ];
 
-const TAB_COLORS: Record<ProviderTab, string> = {
+const TAB_COLORS: Record<string, string> = {
   gemini: "bg-emerald-500/10 text-emerald-400",
   opencode: "bg-amber-500/10 text-amber-400",
   anthropic: "bg-purple-500/10 text-purple-400",
   codex: "bg-green-500/10 text-green-400",
+  security: "bg-red-500/10 text-red-400",
 };
 
 interface ProviderFormState {
@@ -57,7 +63,7 @@ interface ProviderFormState {
 }
 
 export function SettingsModal(props: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<ProviderTab>("gemini");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("gemini");
 
   const [gemini, setGemini] = useState<ProviderFormState>({
     keyInput: "", showKey: false, isSaving: false, status: null,
@@ -82,24 +88,50 @@ export function SettingsModal(props: SettingsModalProps) {
     value: ProviderFormState[K],
   ) => setter(prev => ({ ...prev, [field]: value }));
 
+  /**
+   * Result from a key save+validate operation.
+   * Can be a simple boolean (true=validated) or a details object
+   * (e.g., from OpenCode's permissive validation).
+   */
+  type SaveResult = boolean | { success: boolean; validation?: { valid: boolean; status?: number; error?: string } };
+
   const handleSaveKey = async (
     setter: React.Dispatch<React.SetStateAction<ProviderFormState>>,
     state: ProviderFormState,
-    onSave: (key: string) => Promise<boolean>,
+    onSave: (key: string) => Promise<SaveResult>,
     name: string,
     onSuccess?: () => void,
   ) => {
     if (!state.keyInput.trim()) return;
     updateField(setter, "isSaving", true);
     updateField(setter, "status", null);
-    const success = await onSave(state.keyInput.trim());
+    const result = await onSave(state.keyInput.trim());
     updateField(setter, "isSaving", false);
-    if (success) {
-      updateField(setter, "status", { type: "success", message: `${name} API key saved and validated.` });
+
+    // Support both simple boolean and details-object returns
+    const isSuccess = typeof result === "boolean" ? result : result.success;
+    const validation = typeof result === "boolean" ? undefined : result.validation;
+
+    if (isSuccess) {
+      if (validation && !validation.valid) {
+        // Key was saved but validation failed — show warning with details
+        const detail = validation.status
+          ? ` (HTTP ${validation.status}${validation.error ? `: ${validation.error}` : ""})`
+          : validation.error
+            ? ` (${validation.error})`
+            : "";
+        updateField(setter, "status", {
+          type: "success",
+          message: `${name} API key saved. Validation warning${detail}`,
+        });
+      } else {
+        updateField(setter, "status", { type: "success", message: `${name} API key saved and validated.` });
+      }
       updateField(setter, "keyInput", "");
       onSuccess?.();
     } else {
-      updateField(setter, "status", { type: "error", message: `Failed to validate ${name} API key.` });
+      const detail = validation?.error ? `: ${validation.error}` : "";
+      updateField(setter, "status", { type: "error", message: `Failed to validate ${name} API key${detail}` });
     }
   };
 
@@ -154,10 +186,22 @@ export function SettingsModal(props: SettingsModalProps) {
             docUrl="https://opencode.ai/zen"
             docLabel="opencode.ai/zen"
             hasKey={props.hasOpenCodeKey}
-            onSave={() => handleSaveKey(setOpencode, opencode, props.onSaveOpenCodeKey, "OpenCode", () => {
-              props.onSetOpencodeModel(opencode.modelInput?.trim() || "opencode/big-pickle");
-              props.onSetOpencodeBaseUrl(opencode.baseUrlInput?.trim() || OPENCODE_DEFAULT_BASE_URL);
-            })}
+            onSave={() => {
+            // Pass the form's model and baseUrl to validation so it uses
+            // the values the user just typed, not the stale React state
+            const modelInput = opencode.modelInput?.trim() || "opencode/big-pickle";
+            const baseUrlInput = opencode.baseUrlInput?.trim() || OPENCODE_DEFAULT_BASE_URL;
+            handleSaveKey(
+              setOpencode,
+              opencode,
+              (key) => props.onSaveOpenCodeKey(key, modelInput, baseUrlInput),
+              "OpenCode",
+              () => {
+                props.onSetOpencodeModel(modelInput);
+                props.onSetOpencodeBaseUrl(baseUrlInput);
+              },
+            );
+          }}
             onClear={() => handleClearKey(setOpencode, props.onClearOpenCodeKey, "OpenCode")}
           />
         );
@@ -197,6 +241,12 @@ export function SettingsModal(props: SettingsModalProps) {
             onClear={() => handleClearKey(setCodex, props.onClearCodexKey, "OpenAI")}
           />
         );
+      case "security":
+        return <EncryptionSettings
+          isEncryptionActive={props.isEncryptionActive}
+          onEnableEncryption={props.onEnableEncryption}
+          onDisableEncryption={props.onDisableEncryption}
+        />;
     }
   };
 
@@ -237,7 +287,7 @@ export function SettingsModal(props: SettingsModalProps) {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => setActiveTab(tab.id as SettingsTab)}
                     className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-[10px] font-bold transition-all ${
                       activeTab === tab.id
                         ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
@@ -380,7 +430,22 @@ function ProviderSettings({
                 className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
               />
             </div>
-            <p className="text-xs text-zinc-600">The API endpoint URL. Leave as default for OpenCode Zen.</p>
+            <p className="text-xs text-zinc-600">
+              The API endpoint URL (without the path). Examples:
+            </p>
+            <div className="space-y-1.5 px-1">
+              <p className="text-[10px] font-mono text-zinc-500">OpenCode Zen: <span className="text-zinc-400">https://opencode.ai/zen/v1</span></p>
+              <p className="text-[10px] font-mono text-zinc-500">OpenAI-compatible: <span className="text-zinc-400">https://api.example.com/v1</span></p>
+              <p className="text-[10px] font-mono text-zinc-500">Self-hosted: <span className="text-zinc-400">http://localhost:8080/v1</span></p>
+            </div>
+            <div className="flex items-start gap-2 p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400/70 shrink-0 mt-0.5" />
+              <p className="text-[10px] text-amber-400/70 leading-relaxed">
+                The server must support CORS for browser-based access. If you see
+                &quot;Failed to fetch&quot; errors, the URL may be wrong or the server
+                blocks browser requests. Check your provider&apos;s API documentation.
+              </p>
+            </div>
           </div>
         )}
 
@@ -423,4 +488,218 @@ function OpenCodeSettings(props: {
   onClear: () => void;
 }) {
   return <ProviderSettings {...props} />;
+}
+
+function EncryptionSettings({ isEncryptionActive, onEnableEncryption, onDisableEncryption }: {
+  isEncryptionActive: boolean;
+  onEnableEncryption: (passphrase: string) => Promise<boolean>;
+  onDisableEncryption: () => void;
+}) {
+  const [passphrase, setPassphrase] = useState("");
+  const [confirmPassphrase, setConfirmPassphrase] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  const handleEnable = async () => {
+    if (passphrase.length < 8) {
+      setStatus({ type: "error", message: "Passphrase must be at least 8 characters." });
+      return;
+    }
+    if (passphrase !== confirmPassphrase) {
+      setStatus({ type: "error", message: "Passphrases do not match." });
+      return;
+    }
+
+    setIsSaving(true);
+    setStatus(null);
+    try {
+      const success = await onEnableEncryption(passphrase);
+      if (success) {
+        setStatus({ type: "success", message: "Encryption enabled. API keys are now encrypted at rest." });
+        setPassphrase("");
+        setConfirmPassphrase("");
+        setShowForm(false);
+      } else {
+        setStatus({ type: "error", message: "Failed to enable encryption. Please try again." });
+      }
+    } catch {
+      setStatus({ type: "error", message: "An unexpected error occurred." });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isEncryptionActive) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+          <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <Shield className="w-4 h-4 text-red-400" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-white">Encryption Active</h4>
+            <p className="text-[10px] text-zinc-500">API keys are encrypted at rest</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
+          <Lock className="w-5 h-5 text-green-400 shrink-0" />
+          <p className="text-sm text-green-300">
+            Your API keys are encrypted with AES-256-GCM. They will be unlocked during this session.
+          </p>
+        </div>
+
+        {status && (
+          <div className={`flex items-center gap-3 p-4 rounded-2xl ${
+            status.type === "success"
+              ? "bg-green-500/10 border border-green-500/20"
+              : "bg-red-500/10 border border-red-500/20"
+          }`}>
+            {status.type === "success" ? (
+              <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+            )}
+            <p className={`text-sm ${status.type === "success" ? "text-green-300" : "text-red-300"}`}>{status.message}</p>
+          </div>
+        )}
+
+        <button
+          onClick={() => {
+            if (window.confirm("Disable encryption? Your API keys will be stored in plaintext.")) {
+              onDisableEncryption();
+              setStatus({ type: "success", message: "Encryption disabled. Keys will be saved in plaintext." });
+            }
+          }}
+          className="w-full py-3 border border-red-500/20 text-red-400 font-medium rounded-xl hover:bg-red-500/10 transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          <ShieldOff className="w-4 h-4" />
+          Disable Encryption
+        </button>
+
+        <p className="text-xs text-zinc-600 leading-relaxed">
+          Disabling encryption will store your API keys in plaintext in the browser&apos;s
+          localStorage. Anyone with access to this device can read them.
+        </p>
+      </div>
+    );
+  }
+
+  if (!showForm) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+          <div className="w-8 h-8 rounded-xl bg-zinc-800/80 flex items-center justify-center">
+            <Shield className="w-4 h-4 text-zinc-500" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-white">Encryption</h4>
+            <p className="text-[10px] text-zinc-500">Protect your API keys at rest</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-2xl">
+          <AlertTriangle className="w-5 h-5 text-zinc-500 shrink-0" />
+          <p className="text-sm text-zinc-400">API keys are currently stored in plaintext.</p>
+        </div>
+
+        <button
+          onClick={() => setShowForm(true)}
+          className="w-full py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-xl shadow-[0_0_24px_-6px_rgba(245,158,11,0.15)] hover:shadow-[0_0_32px_-4px_rgba(245,158,11,0.35)] hover:from-amber-500 hover:to-orange-600 transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          <Shield className="w-4 h-4" />
+          Enable Encryption
+        </button>
+
+        <p className="text-xs text-zinc-600 leading-relaxed">
+          Encryption uses AES-256-GCM with PBKDF2 key derivation. Your passphrase is never stored
+          and cannot be recovered if lost.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+        <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center">
+          <Lock className="w-4 h-4 text-red-400" />
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold text-white">Set Encryption Passphrase</h4>
+          <p className="text-[10px] text-zinc-500">Choose a passphrase to protect your keys</p>
+        </div>
+      </div>
+
+      {status && (
+        <div className={`flex items-center gap-3 p-4 rounded-2xl ${
+          status.type === "success"
+            ? "bg-green-500/10 border border-green-500/20"
+            : "bg-red-500/10 border border-red-500/20"
+        }`}>
+          {status.type === "success" ? (
+            <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+          ) : (
+            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+          )}
+          <p className={`text-sm ${status.type === "success" ? "text-green-300" : "text-red-300"}`}>{status.message}</p>
+        </div>
+      )}
+
+      <form onSubmit={(e) => { e.preventDefault(); handleEnable(); }} className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="encryption-passphrase" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">
+            Passphrase
+          </label>
+          <input
+            id="encryption-passphrase"
+            type="password"
+            value={passphrase}
+            onChange={(e) => setPassphrase(e.target.value)}
+            placeholder="At least 8 characters"
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all"
+            autoFocus
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="encryption-confirm" className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">
+            Confirm Passphrase
+          </label>
+          <input
+            id="encryption-confirm"
+            type="password"
+            value={confirmPassphrase}
+            onChange={(e) => setConfirmPassphrase(e.target.value)}
+            placeholder="Re-enter passphrase"
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all"
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={passphrase.length < 8 || passphrase !== confirmPassphrase || isSaving}
+            className="flex-1 py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 disabled:bg-zinc-800 flex items-center justify-center gap-2"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+            {isSaving ? "Encrypting..." : "Enable Encryption"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setShowForm(false); setStatus(null); setPassphrase(""); setConfirmPassphrase(""); }}
+            className="px-4 py-3 border border-white/10 text-zinc-400 font-medium rounded-xl hover:bg-white/5 transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+
+      <p className="text-xs text-zinc-600 leading-relaxed">
+        ⚠️ Your passphrase cannot be recovered if lost. If you lose it, you will need to
+        re-enter your API keys. Write it down or use a password manager.
+      </p>
+    </div>
+  );
 }

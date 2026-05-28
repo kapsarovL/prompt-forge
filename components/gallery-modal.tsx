@@ -91,19 +91,23 @@ export function GalleryModal({
                   className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-all"
                 />
               </div>
-              <div className="relative">
+              <div className="relative group/dropdown">
                 <label htmlFor="gallery-category" className="sr-only">Category filter</label>
                 <select
                   id="gallery-category"
                   name="gallery-category"
                   value={galleryCategory}
                   onChange={e => setGalleryCategory(e.target.value)}
-                  className="bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-zinc-400 appearance-none focus:outline-none focus:border-amber-500/50 min-w-[45px]"
+                  className="bg-gradient-to-b from-zinc-800/60 to-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-amber-500/50 focus:shadow-[0_0_20px_-10px_rgba(245,158,11,0.3)] hover:border-white/20 transition-all min-w-[140px] cursor-pointer"
                 >
-                  <option value="all">All Categories</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                  <option value="all" className="bg-zinc-900 text-zinc-200">All Categories</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id} className="bg-zinc-900 text-zinc-200">{c.label}</option>
+                  ))}
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none transition-colors duration-200 group-focus-within/dropdown:text-amber-400 text-zinc-600">
+                  <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover/dropdown:scale-110" />
+                </div>
               </div>
             </div>
 

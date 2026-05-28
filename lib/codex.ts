@@ -1,6 +1,7 @@
 const CODEX_KEY_STORAGE_KEY = "pf_codex_key";
 const CODEX_DEFAULT_MODEL = "gpt-4o";
 const CODEX_API_URL = "https://api.openai.com/v1/chat/completions";
+const CODEX_TIMEOUT_MS = 30_000;
 
 export function getCodexKey(): string | null {
   if (typeof window === "undefined") return null;
@@ -39,15 +40,28 @@ class CodexAPIError extends Error {
 async function codexFetch(
   apiKey: string,
   body: Record<string, unknown>,
+  signal?: AbortSignal,
 ): Promise<Response> {
-  const response = await fetch(CODEX_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), CODEX_TIMEOUT_MS);
+  const combinedSignal = signal
+    ? combineSignals(signal, controller.signal)
+    : controller.signal;
+
+  let response;
+  try {
+    response = await fetch(CODEX_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+      signal: combinedSignal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     let message = response.statusText;
@@ -61,15 +75,35 @@ async function codexFetch(
   return response;
 }
 
+/** Combine two AbortSignals: if either aborts, the combined signal aborts. */
+function combineSignals(...signals: AbortSignal[]): AbortSignal {
+  const controller = new AbortController();
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort(signal.reason);
+      return controller.signal;
+    }
+    signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
+  }
+  return controller.signal;
+}
+
 async function generateWithRetry<T>(
   fn: () => Promise<T>,
   maxRetries = 2,
+  signal?: AbortSignal,
 ): Promise<T> {
   let lastError: unknown;
   for (let i = 0; i <= maxRetries; i++) {
     try {
+      if (signal?.aborted) {
+        throw new DOMException("Request was aborted", "AbortError");
+      }
       return await fn();
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw error;
+      }
       lastError = error;
       if (
         error instanceof CodexAPIError &&
@@ -99,6 +133,9 @@ export async function validateCodexKey(key?: string): Promise<boolean> {
     });
     return response.ok;
   } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return false;
+    }
     if (error instanceof CodexAPIError && error.status === 400) {
       return true;
     }
@@ -111,6 +148,7 @@ export async function generateWithCodex(
   system: string,
   messages: { role: "user" | "assistant" | "system"; content: string }[],
   options?: { model?: string; temperature?: number; maxTokens?: number },
+  signal?: AbortSignal,
 ): Promise<string> {
   const result = await generateWithRetry(async () => {
     const body: Record<string, unknown> = {
@@ -125,7 +163,7 @@ export async function generateWithCodex(
       body.temperature = options.temperature;
     }
 
-    const response = await codexFetch(apiKey, body);
+    const response = await codexFetch(apiKey, body, signal);
 
     const data = await response.json() as {
       choices?: { message?: { content?: string | null } }[];
@@ -149,19 +187,24 @@ export async function evaluateWithCodex(
   evaluationPrompt: string,
   apiKey: string,
   model?: string,
+  signal?: AbortSignal,
 ): Promise<string> {
   const result = await generateWithRetry(async () => {
-    const response = await codexFetch(apiKey, {
-      model: model ?? CODEX_DEFAULT_MODEL,
-      max_tokens: 8192,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt },
-        { role: "assistant", content: "Expert analysis and critique, structured for AI training purposes." },
-        { role: "user", content: evaluationPrompt },
-      ],
-      temperature: 0.3,
-    });
+    const response = await codexFetch(
+      apiKey,
+      {
+        model: model ?? CODEX_DEFAULT_MODEL,
+        max_tokens: 8192,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt },
+          { role: "assistant", content: "Expert analysis and critique, structured for AI training purposes." },
+          { role: "user", content: evaluationPrompt },
+        ],
+        temperature: 0.3,
+      },
+      signal,
+    );
 
     const data = await response.json() as {
       choices?: { message?: { content?: string | null } }[];

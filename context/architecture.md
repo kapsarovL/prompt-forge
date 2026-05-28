@@ -143,20 +143,16 @@ RootLayout (app/layout.tsx)
 
 ## State Architecture
 
-### 33 State Variables in PromptForge
+### State Architecture (Extracted Hooks)
 
 ```bash
-Input state:       description, category, model, generatedPrompt, refineInstruction
-Loading flags:     isGenerating, isRefining, isEnhancing, isAutoFixing, isEvaluating
-UI state:          showRefineInput, copied
-History:           history, historySearch, visibleHistoryCount
-Versions:          versions
-Templates:         customTemplates
-Provider:          provider, userApiKey, anthropicKey, anthropicModel, codexKey, codexModel, opencodeKey, opencodeModel, opencodeBaseUrl
-Modal visibility:  isGalleryOpen, isVersionsOpen, isEvaluationOpen, isFeedbackOpen, isSettingsOpen
-Modal form:        gallerySearch, galleryCategory, evaluationResult, evaluationError,
-                   feedbackRating, feedbackComment, feedbackSubmitted
-Toast:             toast
+hooks/use-provider-state.ts  — Provider, all API keys, models, base URLs, encryption
+hooks/use-prompt-state.ts    — Description, category, model, generated prompt, refine state
+hooks/use-history-state.ts   — History array, versions, custom templates
+hooks/use-modal-state.ts     — All 5 modal visibilities + transient form state
+hooks/use-toast.ts           — Toast notification state with auto-dismiss
+
+PromptForge composes all 5 hooks, reducing orchestrator size by ~83%.
 ```
 
 ### Side Effects (useEffect)
@@ -361,9 +357,21 @@ prompt-forge/
 │   ├── anthropic.ts         — Anthropic API client (SDK, retry, helpers)
 │   ├── codex.ts             — Codex API client (fetch-based, retry, helpers)
 │   ├── opencode.ts          — OpenCode API client (fetch-based, retry, helpers)
-│   └── utils.ts             — cn() utility (clsx + tailwind-merge)
+│   ├── utils.ts             — cn() utility (clsx + tailwind-merge)
+│   ├── storage.ts           — Versioned localStorage with schema migration
+│   ├── crypto.ts            — AES-256-GCM + PBKDF2 key encryption
+│   └── sanitize.ts          — Input sanitization & prompt injection detection
 ├── hooks/
-│   └── use-modal.ts         — Modal hook (Escape, backdrop, focus restore)
+│   ├── use-modal.ts         — Modal hook (Escape, backdrop, focus restore)
+│   ├── use-toast.ts         — Toast notifications with auto-dismiss
+│   ├── use-provider-state.ts — API keys, models, encryption state
+│   ├── use-prompt-state.ts   — Generation/refine/evaluate state
+│   ├── use-history-state.ts  — History, versions, templates
+│   └── use-modal-state.ts    — All modal visibility + form state
+├── components/
+│   ├── storage-init.tsx     # Client component to init schema migration
+│   ├── encryption-lock.tsx  # Unlock overlay for encrypted keys
+│   └── ...
 └── context/                 — Architecture context files (this directory)
 ```
 
@@ -373,10 +381,12 @@ prompt-forge/
 
 See `context/progress-tracker.md` for planned architectural changes, including:
 
-- API service layer extraction (separating concerns from the orchestrator)
-- React Context for provider/theme state
-- Request cancellation (AbortController)
-- Encryption for stored API keys
-- Testing foundation (Vitest/Playwright)
+- React Context for shared state (if prop drilling becomes a bottleneck)
 - Code splitting for modals
 - Offline capability
+
+**Completed architectural improvements:**
+- ✅ API service layer extracted (hooks/use-* + lib/storage, lib/crypto, lib/sanitize)
+- ✅ Request cancellation (AbortController) on all 4 providers
+- ✅ Encryption for stored API keys (AES-256-GCM + PBKDF2)
+- ✅ Testing foundation (Vitest/Playwright) — 80 tests

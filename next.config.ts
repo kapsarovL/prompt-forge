@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), clipboard-write=self' },
           {
             key: 'Content-Security-Policy',
             value: [
@@ -45,10 +45,11 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://generativelanguage.googleapis.com https://opencode.ai https://*.googleapis.com",
+              "connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://api.anthropic.com https://api.openai.com",
               "font-src 'self'",
               "base-uri 'self'",
               "form-action 'self'",
+              "frame-ancestors 'none'",
             ].join('; '),
           },
         ],

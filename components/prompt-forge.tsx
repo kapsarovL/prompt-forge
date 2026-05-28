@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { GoogleGenAI } from "@google/genai";
+import { useMemo, useState } from "react";
 import { ForgeNavbar } from "@/components/forge-navbar";
+import { EncryptionLock } from "@/components/encryption-lock";
 import { ForgeHero } from "@/components/forge-hero";
 import { ForgeFooter } from "@/components/forge-footer";
 import { ForgeFeatures } from "@/components/forge-features";
@@ -14,619 +14,271 @@ import { VersionsModal } from "@/components/versions-modal";
 import { EvaluationModal } from "@/components/evaluation-modal";
 import { FeedbackModal } from "@/components/feedback-modal";
 import { SettingsModal } from "@/components/settings-modal";
-import { CATEGORIES, MODELS, OPENCODE_MODELS, ANTHROPIC_MODELS, CODEX_MODELS, BUILT_IN_TEMPLATES } from "@/lib/types";
-import type { EvaluationData, PromptHistory, PromptVersion, Provider, Template } from "@/lib/types";
-import { generatePrompt, evaluatePrompt, refinePrompt, smartEnhance, autoFixPrompt } from "@/lib/api";
-import type { ApiConfig } from "@/lib/api";
-import { getErrorMessage, getApiKey } from "@/lib/gemini";
-import { getOpenCodeConfig, validateOpenCodeKey, OPENCODE_DEFAULT_BASE_URL } from "@/lib/opencode";
-import type { OpenCodeConfig } from "@/lib/opencode";
-import { OPENCODE_DEFAULT_MODEL } from "@/lib/opencode";
-import * as anthropicLib from "@/lib/anthropic";
-import * as codexLib from "@/lib/codex";
+import { CATEGORIES, MODELS, OPENCODE_MODELS, ANTHROPIC_MODELS, CODEX_MODELS } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import { useProviderState } from "@/hooks/use-provider-state";
+import { useHistoryState } from "@/hooks/use-history-state";
+import { useModalState } from "@/hooks/use-modal-state";
+import { usePromptState } from "@/hooks/use-prompt-state";
 
 export function PromptForge() {
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0].id);
-  const [model, setModel] = useState(MODELS[0].id);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPrompt, setGeneratedPrompt] = useState("");
-  const [copied, setCopied] = useState(false);
+  // --- Toast ---
+  const { toast, showToast, dismissToast } = useToast();
 
-  const [history, setHistory] = useState<PromptHistory[]>([]);
-  const [historySearch, setHistorySearch] = useState("");
-  const [visibleHistoryCount, setVisibleHistoryCount] = useState(6);
+  // --- Provider state ---
+  const providerState = useProviderState();
 
-  const [versions, setVersions] = useState<PromptVersion[]>([]);
-  const [isVersionsOpen, setIsVersionsOpen] = useState(false);
+  // --- History state ---
+  const historyState = useHistoryState();
 
-  const [customTemplates, setCustomTemplates] = useState<Record<string, string[]>>({});
+  // --- Modal state ---
+  const modalState = useModalState();
 
-  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-  const [gallerySearch, setGallerySearch] = useState("");
-  const [galleryCategory, setGalleryCategory] = useState("all");
-
-  const allTemplates = useMemo<Template[]>(() => {
-    const builtIn: Template[] = [];
-    for (const [cat, texts] of Object.entries(BUILT_IN_TEMPLATES)) {
-      for (const text of texts) {
-        builtIn.push({ text, category: cat, isCustom: false });
-      }
-    }
-    const custom: Template[] = [];
-    for (const [cat, texts] of Object.entries(customTemplates)) {
-      for (const text of texts) {
-        custom.push({ text, category: cat, isCustom: true });
-      }
-    }
-    return [...builtIn, ...custom];
-  }, [customTemplates]);
-
-  const filteredTemplates = useMemo<Template[]>(() => {
-    return allTemplates.filter(t => {
-      const matchesCategory = galleryCategory === "all" || t.category === galleryCategory;
-      const matchesSearch = !gallerySearch || t.text.toLowerCase().includes(gallerySearch.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [allTemplates, gallerySearch, galleryCategory]);
-
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [feedbackRating, setFeedbackRating] = useState(0);
-  const [feedbackComment, setFeedbackComment] = useState("");
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
-
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [evaluationResult, setEvaluationResult] = useState<EvaluationData | null>(null);
-  const [evaluationError, setEvaluationError] = useState("");
-  const [isEvaluationOpen, setIsEvaluationOpen] = useState(false);
-
-  const [isRefining, setIsRefining] = useState(false);
-  const [showRefineInput, setShowRefineInput] = useState(false);
-  const [refineInstruction, setRefineInstruction] = useState("");
-
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
-
-  const [isEnhancing, setIsEnhancing] = useState(false);
-  const [isAutoFixing, setIsAutoFixing] = useState(false);
-
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  // Provider state
-  const [provider, setProvider] = useState<Provider>("gemini");
-  const [userApiKey, setUserApiKey] = useState<string | null>(null);
-  const [opencodeKey, setOpencodeKey] = useState<string | null>(null);
-  const [opencodeModel, setOpencodeModel] = useState(OPENCODE_DEFAULT_MODEL);
-  const [opencodeBaseUrl, setOpencodeBaseUrl] = useState(OPENCODE_DEFAULT_BASE_URL);
-
-  const [anthropicKey, setAnthropicKeyState] = useState<string | null>(null);
-  const [anthropicModel, setAnthropicModelState] = useState(ANTHROPIC_MODELS[0].id);
-
-  const [codexKey, setCodexKeyState] = useState<string | null>(null);
-  const [codexModel, setCodexModelState] = useState(CODEX_MODELS[0].id);
-
-  const getApiConfig = (): ApiConfig => ({
-    provider,
-    geminiKey: userApiKey ?? undefined,
-    geminiModel: model,
-    opencodeConfig: getEffectiveOpenCodeConfig(),
-    anthropicConfig: getEffectiveAnthropicConfig(),
-    codexConfig: getEffectiveCodexConfig(),
+  // --- Prompt state (depends on provider, history, modal, toast) ---
+  const promptState = usePromptState({
+    getApiConfig: providerState.getApiConfig,
+    addVersion: historyState.addVersion,
+    addHistory: historyState.addHistory,
+    showToast,
+    provider: providerState.provider,
+    opencodeModel: providerState.opencodeModel,
+    anthropicModel: providerState.anthropicModel,
+    codexModel: providerState.codexModel,
+    onOpenEvaluation: modalState.openEvaluation,
+    onSetEvaluationResult: modalState.setEvaluationResult,
+    onSetEvaluationError: modalState.setEvaluationError,
   });
 
-  // Load provider state from localStorage
-  useEffect(() => {
-    const savedKey = localStorage.getItem("promptforge_api_key");
-    if (savedKey) setUserApiKey(savedKey);
+  // Resolve effective model list based on active provider
+  const effectiveModels = providerState.provider === "opencode"
+    ? OPENCODE_MODELS
+    : providerState.provider === "anthropic"
+      ? ANTHROPIC_MODELS
+      : providerState.provider === "codex"
+        ? CODEX_MODELS
+        : MODELS;
 
-    const savedOpenKey = localStorage.getItem("promptforge_opencode_api_key");
-    if (savedOpenKey) setOpencodeKey(savedOpenKey);
-
-    const savedModel = localStorage.getItem("promptforge_opencode_model");
-    if (savedModel) setOpencodeModel(savedModel);
-
-    const savedBaseUrl = localStorage.getItem("promptforge_opencode_base_url");
-    if (savedBaseUrl) setOpencodeBaseUrl(savedBaseUrl);
-
-    const savedAnthropicKey = localStorage.getItem("pf_anthropic_key");
-    if (savedAnthropicKey) setAnthropicKeyState(savedAnthropicKey);
-
-    const savedAnthropicModel = localStorage.getItem("pf_anthropic_model");
-    if (savedAnthropicModel) setAnthropicModelState(savedAnthropicModel);
-
-    const savedCodexKey = localStorage.getItem("pf_codex_key");
-    if (savedCodexKey) setCodexKeyState(savedCodexKey);
-
-    const savedCodexModel = localStorage.getItem("pf_codex_model");
-    if (savedCodexModel) setCodexModelState(savedCodexModel);
-
-    const savedProvider = localStorage.getItem("promptforge_provider") as Provider | null;
-    if (savedProvider === "gemini" || savedProvider === "opencode" || savedProvider === "anthropic" || savedProvider === "codex") setProvider(savedProvider);
-  }, []);
-
-  // Persist provider preference
-  useEffect(() => {
-    localStorage.setItem("promptforge_provider", provider);
-  }, [provider]);
-
-  // Gemini API key handlers
-  const handleSaveGeminiKey = async (key: string): Promise<boolean> => {
-    try {
-      const ai = new GoogleGenAI({ apiKey: key });
-      await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: "Reply with only the word OK.",
-        config: { temperature: 0 },
-      });
-      setUserApiKey(key);
-      localStorage.setItem("promptforge_api_key", key);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const handleClearGeminiKey = () => {
-    setUserApiKey(null);
-    localStorage.removeItem("promptforge_api_key");
-  };
-
-  // OpenCode API key handlers
-  const handleSaveOpenCodeKey = async (key: string): Promise<boolean> => {
-    const valid = await validateOpenCodeKey(key, opencodeBaseUrl);
-    if (valid) {
-      setOpencodeKey(key);
-      localStorage.setItem("promptforge_opencode_api_key", key);
-      localStorage.setItem("promptforge_opencode_model", opencodeModel);
-    }
-    return valid;
-  };
-
-  const handleClearOpenCodeKey = () => {
-    setOpencodeKey(null);
-    localStorage.removeItem("promptforge_opencode_api_key");
-  };
-
-  const handleSetOpencodeModel = (model: string) => {
-    setOpencodeModel(model);
-    localStorage.setItem("promptforge_opencode_model", model);
-  };
-
-  const handleSetOpencodeBaseUrl = (url: string) => {
-    setOpencodeBaseUrl(url);
-    localStorage.setItem("promptforge_opencode_base_url", url);
-  };
-
-  const getEffectiveOpenCodeConfig = (): OpenCodeConfig | null => {
-    const config = getOpenCodeConfig();
-    if (config) return config;
-    if (opencodeKey) {
-      return { apiKey: opencodeKey, model: opencodeModel, baseUrl: opencodeBaseUrl };
-    }
-    return null;
-  };
-
-  // Anthropic API key handlers
-  const handleSaveAnthropicKey = async (key: string): Promise<boolean> => {
-    const valid = await anthropicLib.validateAnthropicKey(key);
-    if (valid) {
-      setAnthropicKeyState(key);
-      anthropicLib.setAnthropicKey(key);
-      anthropicLib.setAnthropicModel(anthropicModel);
-    }
-    return valid;
-  };
-
-  const handleClearAnthropicKey = () => {
-    setAnthropicKeyState(null);
-    anthropicLib.removeAnthropicKey();
-  };
-
-  const handleSetAnthropicModel = (model: string) => {
-    setAnthropicModelState(model);
-    anthropicLib.setAnthropicModel(model);
-  };
-
-  const getEffectiveAnthropicConfig = (): { apiKey: string; model: string } | null => {
-    const envKey = anthropicLib.getAnthropicKey();
-    if (envKey) return { apiKey: envKey, model: anthropicModel };
-    if (anthropicKey) {
-      return { apiKey: anthropicKey, model: anthropicModel };
-    }
-    return null;
-  };
-
-  // OpenAI Codex handlers
-  const handleSaveCodexKey = async (key: string): Promise<boolean> => {
-    const valid = await codexLib.validateCodexKey(key);
-    if (valid) {
-      setCodexKeyState(key);
-      codexLib.setCodexKey(key);
-      codexLib.setCodexModel(codexModel);
-    }
-    return valid;
-  };
-
-  const handleClearCodexKey = () => {
-    setCodexKeyState(null);
-    codexLib.removeCodexKey();
-  };
-
-  const handleSetCodexModel = (model: string) => {
-    setCodexModelState(model);
-    codexLib.setCodexModel(model);
-  };
-
-  const getEffectiveCodexConfig = (): { apiKey: string; model: string } | null => {
-    const envKey = codexLib.getCodexKey();
-    if (envKey) return { apiKey: envKey, model: codexModel };
-    if (codexKey) {
-      return { apiKey: codexKey, model: codexModel };
-    }
-    return null;
-  };
-
-  const showToast = (message: string, type: 'success' | 'info' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const handleDeleteTemplate = (e: React.MouseEvent, text: string, catId: string) => {
-    e.stopPropagation();
-    setCustomTemplates(prev => {
-      const current = prev[catId] || [];
-      return { ...prev, [catId]: current.filter(t => t !== text) };
+  // --- Filtered templates (depends on history state templates) ---
+  const filteredTemplates = useMemo(() => {
+    return historyState.allTemplates.filter((t) => {
+      const matchesCategory = modalState.galleryCategory === "all" || t.category === modalState.galleryCategory;
+      const matchesSearch = !modalState.gallerySearch || t.text.toLowerCase().includes(modalState.gallerySearch.toLowerCase());
+      return matchesCategory && matchesSearch;
     });
-    showToast("Template deleted");
-  };
+  }, [historyState.allTemplates, modalState.gallerySearch, modalState.galleryCategory]);
 
-  useEffect(() => {
-    const savedHistory = localStorage.getItem("promptforge_history");
-    if (savedHistory) {
-      try { setHistory(JSON.parse(savedHistory)); } catch {}
+  // --- Encryption lock state ---
+  const [isEncryptionInitialized, setIsEncryptionInitialized] = useState(false);
+
+  const handleEncryptionUnlock = async (passphrase: string): Promise<boolean> => {
+    const success = await providerState.handleUnlockKeys(passphrase);
+    if (success) {
+      setIsEncryptionInitialized(true);
     }
-    const savedCustomTemplates = localStorage.getItem("promptforge_custom_templates");
-    if (savedCustomTemplates) {
-      try { setCustomTemplates(JSON.parse(savedCustomTemplates)); } catch {}
-    }
-    const savedVersions = localStorage.getItem("promptforge_versions");
-    if (savedVersions) {
-      try { setVersions(JSON.parse(savedVersions)); } catch {}
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("promptforge_history", JSON.stringify(history));
-  }, [history]);
-
-  useEffect(() => {
-    localStorage.setItem("promptforge_custom_templates", JSON.stringify(customTemplates));
-  }, [customTemplates]);
-
-  useEffect(() => {
-    localStorage.setItem("promptforge_versions", JSON.stringify(versions));
-  }, [versions]);
-
-  const addVersion = useCallback((prompt: string) => {
-    const newVersion: PromptVersion = {
-      id: Math.random().toString(36).substring(2),
-      prompt,
-      timestamp: Date.now(),
-    };
-    setVersions(prev => [newVersion, ...prev].slice(0, 20));
-  }, []);
-
-  const addHistory = useCallback((item: Omit<PromptHistory, "id" | "timestamp">) => {
-    const newItem: PromptHistory = {
-      id: Math.random().toString(36).substring(2),
-      timestamp: Date.now(),
-      ...item,
-    };
-    setHistory(prev => [newItem, ...prev].slice(0, 50));
-  }, []);
-
-  const handleGenerate = async () => {
-    if (!description.trim() || isGenerating) return;
-    setIsGenerating(true);
-    setGeneratedPrompt("");
-    try {
-      const text = await generatePrompt(description, category, getApiConfig());
-      setGeneratedPrompt(text);
-      addVersion(text);
-      const modelName = provider === "opencode" ? opencodeModel : provider === "anthropic" ? anthropicModel : provider === "codex" ? codexModel : model;
-      addHistory({ description, category, model: modelName, prompt: text });
-    } catch (err) {
-      console.error("Error generating prompt:", err);
-      showToast(getErrorMessage(err), "info");
-    } finally {
-      setIsGenerating(false);
-    }
+    return success;
   };
 
-  const handleSmartEnhance = async () => {
-    if (!description.trim() || isEnhancing) return;
-    setIsEnhancing(true);
-    try {
-      const text = await smartEnhance(description, getApiConfig());
-      setDescription(text);
-      showToast("Description enhanced!", "info");
-    } catch (err) {
-      console.error(err);
-      showToast("Enhancement failed", "info");
-    } finally {
-      setIsEnhancing(false);
-    }
-  };
+  // If encryption is locked, show the unlock overlay
+  if (providerState.isEncryptionLocked && !isEncryptionInitialized) {
+    return <EncryptionLock onUnlock={handleEncryptionUnlock} />;
+  }
 
-  const handleAutoFix = async () => {
-    if (!generatedPrompt || !evaluationResult || isAutoFixing) return;
-    setIsAutoFixing(true);
-    try {
-      const text = await autoFixPrompt(generatedPrompt, evaluationResult, getApiConfig());
-      setGeneratedPrompt(text);
-      setIsEvaluationOpen(false);
-      showToast("Prompt optimized based on evaluation!", "success");
-      addVersion(text);
-      const modelName = provider === "opencode" ? opencodeModel : provider === "anthropic" ? anthropicModel : provider === "codex" ? codexModel : model;
-      addHistory({ description: description + " (Auto-Optimized)", category, model: modelName, prompt: text });
-    } catch (err) {
-      console.error(err);
-      showToast("Auto-fix failed", "info");
-    } finally {
-      setIsAutoFixing(false);
-    }
-  };
-
-  const handleCopy = () => {
-    if (!generatedPrompt) return;
-    navigator.clipboard.writeText(generatedPrompt).catch(() => showToast("Copy failed", "info"));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleRecall = (item: PromptHistory) => {
-    setDescription(item.description);
-    setCategory(item.category);
-    setModel(item.model);
-    setGeneratedPrompt(item.prompt);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteHistory = (id: string) => {
-    if (!window.confirm("Delete this history item?")) return;
-    setHistory(prev => prev.filter(item => item.id !== id));
-  };
-
-  const handleExport = () => {
-    if (!generatedPrompt) return;
-    const element = document.createElement("a");
-    const file = new Blob([generatedPrompt], {type: 'text/plain'});
-    const url = URL.createObjectURL(file);
-    element.href = url;
-    element.download = `promptforge-${category}-${new Date().toISOString().split('T')[0].replace(/[:.]/g, '-')}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    URL.revokeObjectURL(url);
-    showToast("Prompt exported successfully!");
-  };
-
-  const handleEvaluate = async () => {
-    if (!generatedPrompt || isEvaluating) return;
-    setIsEvaluating(true);
-    setEvaluationResult(null);
-    setEvaluationError("");
-    setIsEvaluationOpen(true);
-    try {
-      const result = await evaluatePrompt(generatedPrompt, getApiConfig());
-      setEvaluationResult(result);
-    } catch (err) {
-      console.error("Error evaluating prompt:", err);
-      setEvaluationError(getErrorMessage(err));
-    } finally {
-      setIsEvaluating(false);
-    }
-  };
-
-  const handleRefine = async () => {
-    if (!generatedPrompt || !refineInstruction.trim() || isRefining) return;
-    setIsRefining(true);
-    try {
-      const text = await refinePrompt(generatedPrompt, refineInstruction, getApiConfig());
-      setGeneratedPrompt(text);
-      addVersion(text);
-      const modelName = provider === "opencode" ? opencodeModel : provider === "anthropic" ? anthropicModel : provider === "codex" ? codexModel : model;
-      addHistory({ description: description + " (Refined)", category, model: modelName, prompt: text });
-      setRefineInstruction("");
-      setShowRefineInput(false);
-    } catch (err) {
-      console.error("Error refining prompt:", err);
-      showToast(getErrorMessage(err), "info");
-    } finally {
-      setIsRefining(false);
-    }
-  };
-
+  // --- Feedback submit handler ---
   const handleFeedbackSubmit = () => {
-    if (feedbackRating === 0 && !feedbackComment.trim()) return;
+    if (modalState.feedbackRating === 0 && !modalState.feedbackComment.trim()) return;
     const feedback = {
       id: Math.random().toString(36).substring(2),
-      prompt: generatedPrompt,
-      rating: feedbackRating,
-      comment: feedbackComment,
+      prompt: promptState.generatedPrompt,
+      rating: modalState.feedbackRating,
+      comment: modalState.feedbackComment,
       timestamp: Date.now(),
     };
     const savedFeedback = localStorage.getItem("promptforge_feedback");
     let parsedFeedback: unknown[] = [];
     if (savedFeedback) {
-      try { parsedFeedback = JSON.parse(savedFeedback) as unknown[]; } catch { parsedFeedback = []; }
+      try {
+        parsedFeedback = JSON.parse(savedFeedback) as unknown[];
+      } catch {
+        parsedFeedback = [];
+      }
     }
     localStorage.setItem("promptforge_feedback", JSON.stringify([feedback, ...parsedFeedback]));
-    setFeedbackSubmitted(true);
+    modalState.setFeedbackSubmitted(true);
     setTimeout(() => {
-      setIsFeedbackOpen(false);
-      setTimeout(() => {
-        setFeedbackSubmitted(false);
-        setFeedbackRating(0);
-        setFeedbackComment("");
-      }, 300);
+      modalState.closeFeedback();
     }, 1500);
   };
 
-  const handleSaveTemplate = () => {
-    if (!description.trim()) return;
-    const current = customTemplates[category] || [];
-    if (current.includes(description.trim())) return;
-    setCustomTemplates(prev => ({
-      ...prev,
-      [category]: [description.trim(), ...current],
-    }));
-    showToast("Template saved successfully!");
+  // --- Delete template handler ---
+  const handleDeleteTemplate = (e: React.MouseEvent, text: string, catId: string) => {
+    e.stopPropagation();
+    historyState.deleteTemplate(text, catId);
+    showToast("Template deleted");
   };
-
-  const effectiveModels = provider === "opencode" ? OPENCODE_MODELS : provider === "anthropic" ? ANTHROPIC_MODELS : provider === "codex" ? CODEX_MODELS : MODELS;
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-500/30 relative">
+      {/* Ambient glow blobs + noise overlay */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-15%] left-[-10%] h-[50%] w-[50%] rounded-full bg-amber-600/8 blur-[120px]" />
         <div className="absolute bottom-[-15%] right-[-10%] h-[50%] w-[50%] rounded-full bg-orange-600/8 blur-[120px]" />
         <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay" />
       </div>
+
       <div className="relative z-10">
-      <ForgeNavbar
-        onOpenFeedback={() => setIsFeedbackOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenVersions={() => setIsVersionsOpen(true)}
-        hasGeneratedPrompt={generatedPrompt.length > 0}
-      />
+        <ForgeNavbar
+          onOpenFeedback={modalState.openFeedback}
+          onOpenSettings={modalState.openSettings}
+          onOpenVersions={modalState.openVersions}
+          hasGeneratedPrompt={promptState.generatedPrompt.length > 0}
+        />
 
-      <ForgeHero />
+        <ForgeHero />
 
-      <ForgeGenerator
-        description={description}
-        setDescription={setDescription}
-        category={category}
-        setCategory={setCategory}
-        model={model}
-        setModel={setModel}
-        isGenerating={isGenerating}
-        generatedPrompt={generatedPrompt}
-        copied={copied}
-        isEnhancing={isEnhancing}
-        isRefining={isRefining}
-        showRefineInput={showRefineInput}
-        setShowRefineInput={setShowRefineInput}
-        refineInstruction={refineInstruction}
-        setRefineInstruction={setRefineInstruction}
-        handleGenerate={handleGenerate}
-        handleCopy={handleCopy}
-        handleEvaluate={handleEvaluate}
-        handleRefine={handleRefine}
-        handleExport={handleExport}
-        handleSmartEnhance={handleSmartEnhance}
-        handleSaveTemplate={handleSaveTemplate}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        hasCustomKey={userApiKey !== null}
-        hasApiKey={provider === "gemini" ? !!getApiKey() : provider === "opencode" ? !!(opencodeKey || getOpenCodeConfig()) : provider === "anthropic" ? !!(anthropicKey || anthropicLib.getAnthropicKey()) : !!(codexKey || codexLib.getCodexKey())}
-        categories={CATEGORIES}
-        models={effectiveModels}
-        provider={provider}
-        setProvider={setProvider}
-        opencodeModel={opencodeModel}
-        onSetOpencodeModel={handleSetOpencodeModel}
-        onOpenVersions={() => setIsVersionsOpen(true)}
-        onOpenGallery={() => setIsGalleryOpen(true)}
-      />
+        <ForgeGenerator
+          description={promptState.description}
+          setDescription={promptState.setDescription}
+          category={promptState.category}
+          setCategory={promptState.setCategory}
+          model={promptState.model}
+          setModel={promptState.setModel}
+          isGenerating={promptState.isGenerating}
+          generatedPrompt={promptState.generatedPrompt}
+          copied={promptState.copied}
+          isEnhancing={promptState.isEnhancing}
+          isRefining={promptState.isRefining}
+          showRefineInput={promptState.showRefineInput}
+          setShowRefineInput={promptState.setShowRefineInput}
+          refineInstruction={promptState.refineInstruction}
+          setRefineInstruction={promptState.setRefineInstruction}
+          handleGenerate={promptState.handleGenerate}
+          handleCopy={promptState.handleCopy}
+          handleEvaluate={promptState.handleEvaluate}
+          handleRefine={promptState.handleRefine}
+          handleExport={promptState.handleExport}
+          handleSmartEnhance={promptState.handleSmartEnhance}
+          handleSaveTemplate={() => historyState.saveTemplate(promptState.category, promptState.description)}
+          onOpenSettings={modalState.openSettings}
+          hasCustomKey={providerState.hasCustomKey}
+          hasApiKey={providerState.hasApiKey}
+          categories={CATEGORIES}
+          models={effectiveModels}
+          provider={providerState.provider}
+          setProvider={providerState.setProvider}
+          opencodeModel={providerState.opencodeModel}
+          onSetOpencodeModel={providerState.handleSetOpencodeModel}
+          anthropicModel={providerState.anthropicModel}
+          onSetAnthropicModel={providerState.handleSetAnthropicModel}
+          codexModel={providerState.codexModel}
+          onSetCodexModel={providerState.handleSetCodexModel}
+          onOpenVersions={modalState.openVersions}
+          onOpenGallery={modalState.openGallery}
+        />
 
-      <ForgeVault
-        history={history}
-        historySearch={historySearch}
-        setHistorySearch={setHistorySearch}
-        visibleHistoryCount={visibleHistoryCount}
-        setVisibleHistoryCount={setVisibleHistoryCount}
-        handleRecall={handleRecall}
-        handleDeleteHistory={handleDeleteHistory}
-        handleClearAllHistory={() => {
-          if (window.confirm("Clear all history? This cannot be undone.")) setHistory([]);
-        }}
-        categories={CATEGORIES}
-        showToast={showToast}
-      />
+        <ForgeVault
+          history={historyState.history}
+          historySearch={historyState.historySearch}
+          setHistorySearch={historyState.setHistorySearch}
+          visibleHistoryCount={historyState.visibleHistoryCount}
+          setVisibleHistoryCount={historyState.setVisibleHistoryCount}
+          handleRecall={promptState.handleRecall}
+          handleDeleteHistory={(id: string) => {
+            if (!window.confirm("Delete this history item?")) return;
+            historyState.deleteHistoryItem(id);
+          }}
+          handleClearAllHistory={() => {
+            if (window.confirm("Clear all history? This cannot be undone.")) historyState.clearAllHistory();
+          }}
+          categories={CATEGORIES}
+          showToast={showToast}
+        />
 
-      <ForgeFeatures />
+        <ForgeFeatures />
 
-      <ForgeFooter />
+        <ForgeFooter />
 
-      <VersionsModal
-        isOpen={isVersionsOpen}
-        onClose={() => setIsVersionsOpen(false)}
-        versions={versions}
-        setGeneratedPrompt={setGeneratedPrompt}
-        showToast={showToast}
-      />
+        {/* Modals */}
+        <VersionsModal
+          isOpen={modalState.isVersionsOpen}
+          onClose={modalState.closeVersions}
+          versions={historyState.versions}
+          setGeneratedPrompt={promptState.setGeneratedPrompt}
+          showToast={showToast}
+        />
 
-      <EvaluationModal
-        isOpen={isEvaluationOpen}
-        onClose={() => setIsEvaluationOpen(false)}
-        isEvaluating={isEvaluating}
-        evaluationResult={evaluationResult}
-        evaluationError={evaluationError}
-        handleAutoFix={handleAutoFix}
-        isAutoFixing={isAutoFixing}
-      />
+        <EvaluationModal
+          isOpen={modalState.isEvaluationOpen}
+          onClose={modalState.closeEvaluation}
+          isEvaluating={promptState.isEvaluating}
+          evaluationResult={modalState.evaluationResult}
+          evaluationError={modalState.evaluationError}
+          handleAutoFix={() => promptState.handleAutoFix(modalState.evaluationResult!)}
+          isAutoFixing={promptState.isAutoFixing}
+        />
 
-      <FeedbackModal
-        isOpen={isFeedbackOpen}
-        onClose={() => setIsFeedbackOpen(false)}
-        feedbackSubmitted={feedbackSubmitted}
-        feedbackRating={feedbackRating}
-        setFeedbackRating={setFeedbackRating}
-        feedbackComment={feedbackComment}
-        setFeedbackComment={setFeedbackComment}
-        handleFeedbackSubmit={handleFeedbackSubmit}
-      />
+        <FeedbackModal
+          isOpen={modalState.isFeedbackOpen}
+          onClose={modalState.closeFeedback}
+          feedbackSubmitted={modalState.feedbackSubmitted}
+          feedbackRating={modalState.feedbackRating}
+          setFeedbackRating={modalState.setFeedbackRating}
+          feedbackComment={modalState.feedbackComment}
+          setFeedbackComment={modalState.setFeedbackComment}
+          handleFeedbackSubmit={handleFeedbackSubmit}
+        />
 
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onSaveGeminiKey={handleSaveGeminiKey}
-        onClearGeminiKey={handleClearGeminiKey}
-        hasGeminiKey={userApiKey !== null}
-        onSaveOpenCodeKey={handleSaveOpenCodeKey}
-        onClearOpenCodeKey={handleClearOpenCodeKey}
-        hasOpenCodeKey={opencodeKey !== null}
-        opencodeModel={opencodeModel}
-        onSetOpencodeModel={handleSetOpencodeModel}
-        opencodeBaseUrl={opencodeBaseUrl}
-        onSetOpencodeBaseUrl={handleSetOpencodeBaseUrl}
-        onSaveAnthropicKey={handleSaveAnthropicKey}
-        onClearAnthropicKey={handleClearAnthropicKey}
-        hasAnthropicKey={anthropicKey !== null}
-        anthropicModel={anthropicModel}
-        onSetAnthropicModel={handleSetAnthropicModel}
-        onSaveCodexKey={handleSaveCodexKey}
-        onClearCodexKey={handleClearCodexKey}
-        hasCodexKey={codexKey !== null}
-        codexModel={codexModel}
-        onSetCodexModel={handleSetCodexModel}
-      />
+        <SettingsModal
+          isOpen={modalState.isSettingsOpen}
+          onClose={modalState.closeSettings}
+          onSaveGeminiKey={providerState.handleSaveGeminiKey}
+          onClearGeminiKey={() => {
+            if (window.confirm("Clear Gemini API key?")) providerState.handleClearGeminiKey();
+          }}
+          hasGeminiKey={providerState.geminiKey !== null}
+          onSaveOpenCodeKey={providerState.handleSaveOpenCodeKey}
+          onClearOpenCodeKey={() => {
+            if (window.confirm("Clear OpenCode API key?")) providerState.handleClearOpenCodeKey();
+          }}
+          hasOpenCodeKey={providerState.opencodeKey !== null}
+          opencodeModel={providerState.opencodeModel}
+          onSetOpencodeModel={providerState.handleSetOpencodeModel}
+          opencodeBaseUrl={providerState.opencodeBaseUrl}
+          onSetOpencodeBaseUrl={providerState.handleSetOpencodeBaseUrl}
+          onSaveAnthropicKey={providerState.handleSaveAnthropicKey}
+          onClearAnthropicKey={() => {
+            if (window.confirm("Clear Anthropic API key?")) providerState.handleClearAnthropicKey();
+          }}
+          hasAnthropicKey={providerState.anthropicKey !== null}
+          anthropicModel={providerState.anthropicModel}
+          onSetAnthropicModel={providerState.handleSetAnthropicModel}
+          onSaveCodexKey={providerState.handleSaveCodexKey}
+          onClearCodexKey={() => {
+            if (window.confirm("Clear OpenAI Codex API key?")) providerState.handleClearCodexKey();
+          }}
+          hasCodexKey={providerState.codexKey !== null}
+          codexModel={providerState.codexModel}
+          onSetCodexModel={providerState.handleSetCodexModel}
+          isEncryptionActive={!!providerState.passphrase || providerState.isEncryptionLocked}
+          onEnableEncryption={providerState.handleEnableEncryption}
+          onDisableEncryption={providerState.handleDisableEncryption}
+        />
 
-      <GalleryModal
-        isOpen={isGalleryOpen}
-        onClose={() => setIsGalleryOpen(false)}
-        gallerySearch={gallerySearch}
-        setGallerySearch={setGallerySearch}
-        galleryCategory={galleryCategory}
-        setGalleryCategory={setGalleryCategory}
-        filteredTemplates={filteredTemplates}
-        categories={CATEGORIES}
-        setDescription={setDescription}
-        setCategory={setCategory}
-        handleDeleteTemplate={handleDeleteTemplate}
-        showToast={(msg) => showToast(msg)}
-      />
+        <GalleryModal
+          isOpen={modalState.isGalleryOpen}
+          onClose={modalState.closeGallery}
+          gallerySearch={modalState.gallerySearch}
+          setGallerySearch={modalState.setGallerySearch}
+          galleryCategory={modalState.galleryCategory}
+          setGalleryCategory={modalState.setGalleryCategory}
+          filteredTemplates={filteredTemplates}
+          categories={CATEGORIES}
+          setDescription={promptState.setDescription}
+          setCategory={promptState.setCategory}
+          handleDeleteTemplate={handleDeleteTemplate}
+          showToast={showToast}
+        />
 
-      <ForgeToast toast={toast} onClose={() => setToast(null)} />
+        <ForgeToast toast={toast} onClose={dismissToast} />
       </div>
     </div>
   );

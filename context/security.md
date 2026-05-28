@@ -107,18 +107,17 @@ API keys and prompts are sent directly from the browser to AI provider APIs over
 
 ### Short Term (Next Release)
 
-- [ ] **Implement CSP headers** in `next.config.ts` — restrict script sources, restrict API call destinations to configured provider URLs only
-- [ ] **Add security headers** — X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Referrer-Policy: strict-origin-when-cross-origin
+- [x] **Implement CSP headers** in `next.config.ts` — restrict script sources, restrict API call destinations to configured provider URLs only
+- [x] **Add security headers** — X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Referrer-Policy: strict-origin-when-cross-origin, Permissions-Policy, frame-ancestors
 
 ### Medium Term
 
-- [ ] **Encrypted API key storage** — use Web Crypto API (`crypto.subtle.encrypt`) with a key derived from a user-provided master passphrase, or use the Credential Management API
-- [x] **Implement AbortController** — added to all OpenCode fetch calls (validate, completion, evaluate) with 30s timeout and proper cleanup via `clearTimeout`/`try-finally`
-- [ ] **Input sanitization** — validate and sanitize any user input before sending to AI APIs
+- [x] **Encrypted API key storage** — implemented in `lib/crypto.ts` using AES-256-GCM + PBKDF2 (600K iterations). Accessible via Settings → Security tab. Unlock overlay on page load when encryption is active.
+- [x] **Implement AbortController** — added to all providers (Gemini, Anthropic, Codex, OpenCode) with 30s timeout.
+- [x] **Input sanitization** — implemented in `lib/sanitize.ts`. Detects common prompt injection patterns, strips control characters, enforces length limits. Integrated into `lib/api.ts` before all provider calls.
 
 ### Future
 
-- [ ] **Content Security Policy enforcement** — strict CSP with nonce-based script loading
 - [ ] **Isolated iframe for output rendering** — sandbox generated content to prevent XSS if a model returns executable code
 - [ ] **Subresource Integrity (SRI)** — for any external resources loaded at runtime
 - [ ] **Security audit** — third-party review before public v1.0 release
