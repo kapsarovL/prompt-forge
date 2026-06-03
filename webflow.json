@@ -1,0 +1,12 @@
+{
+  "telemetry": {
+    "global": {
+      "allowTelemetry": true,
+      "lastPrompted": 1780513506153,
+      "version": "2.0.0"
+    }
+  },
+  "cloud": {
+    "workspace_id": "688120ab0ba16c699f53e451"
+  }
+}

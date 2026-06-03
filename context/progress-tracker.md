@@ -29,10 +29,12 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - [x] Fix export blob URL leak (add `URL.revokeObjectURL`) + Windows-safe filename
 
 ### Phase 2 — Modal UX Improvements
+
 - [x] Create `hooks/use-modal.ts` — Escape key, backdrop click, focus restoration, ARIA
 - [x] Adopt `useModal` in all 5 modals: evaluation, feedback, gallery, versions, settings
 
 ### Phase 3 — Destructive Confirmations
+
 - [x] `window.confirm` on Clear All history
 - [x] `window.confirm` on delete history item
 - [x] `window.confirm` on clear Gemini API key
@@ -40,14 +42,17 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - [x] `window.confirm` on delete template
 
 ### Phase 4 — Proactive API Key Detection
+
 - [x] Warning banner in forge-generator when no API key configured for active provider
 - [x] Generate button disabled with tooltip when no key available
 - [x] `hasApiKey` prop computed based on provider + env/localStorage
 
 ### Phase 5 — Race Condition Guards
+
 - [x] Early-return guard (`if (isXxx) return`) on all async handlers: generate, enhance, auto-fix, evaluate, refine
 
 ### Phase 6 — Accessibility
+
 - [x] `role="status"` + `aria-live="polite"` on toast
 - [x] `aria-describedby` on output panel
 - [x] `role="alert"` on error boundary
@@ -55,15 +60,18 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - [x] `aria-label` on star rating buttons (descriptive by count)
 
 ### Phase 7 — Architectural Debt
+
 - [x] Add `Template` type to `lib/types.ts`
 - [x] `useMemo` on `allTemplates` + `filteredTemplates`
 - [x] Delete dead `hooks/use-mobile.ts`
 
 ### Phase 8 — Medium Issues
+
 - [x] AbortController + 30s timeout on OpenCode fetch calls (completion, evaluate)
 - [x] AbortController + 15s timeout on OpenCode key validation
 
 ### Phase 9 — Context Doc Updates
+
 - [x] Updated `ui-context.md` — amber accent, rounded-xl, useModal pattern, ARIA, hamburger menu
 - [x] Updated `security.md` — marked AbortController as implemented
 - [x] Updated `progress-tracker.md` — documented all 9 phases
@@ -75,6 +83,7 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 ## Recently Completed
 
 ### Improvement Sprint
+
 - [x] **Extracted hooks from PromptForge** — created `hooks/use-prompt-state.ts`, `hooks/use-provider-state.ts`, `hooks/use-history-state.ts`, `hooks/use-modal-state.ts`, `hooks/use-toast.ts`. Reduced PromptForge from ~705 lines to ~120 lines of composition logic.
 - [x] **AbortController + timeout on all providers** — added 30s timeout with AbortController to Gemini (via Promise.race + abort signal), Anthropic, and Codex clients. OpenCode already had it.
 - [x] **Security headers** — updated CSP in `next.config.ts` to include `api.anthropic.com`, `api.openai.com`, `frame-ancestors 'none'`, and `clipboard-write=self` in Permissions-Policy.
@@ -86,6 +95,7 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - [x] OpenAI Codex provider support — `lib/codex.ts` (fetch-based, no SDK dep), `Provider` union + `CODEX_MODELS` added, 5 API functions branched via `ApiConfig.codexConfig`, Codex toggle button in forge-generator, Codex settings in settings-modal, state persistence in prompt-forge
 
 ### Landing Page Overhaul
+
 - [x] `FeatureCard` — added `icon` prop; icon container with amber tint + hover state
 - [x] `ScrollProgress` — fixed top-of-viewport amber gradient bar that fills on scroll
 - [x] `Navbar` — desktop scroll links (Features, How It Works, FAQ) + mobile hamburger with slide-down menu
@@ -98,6 +108,7 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - [x] `ForgeFeatures` — updated with icons to match new FeatureCard interface
 
 ### Forge Page Polish
+
 - [x] `ForgeNavbar` — redesigned to match landing page: Settings/Versions/GitHub buttons, mobile hamburger, removed "Get Started"
 - [x] `ForgeGenerator` — compact page header, API key warning banner, Ctrl+Enter hint, refined category buttons, provider toggle grid, better empty state, smoother output transitions, refined toolbar/refine-bar
 - [x] `ForgeVault` — stagger entrance animations, category icons + badges, model badge, faded action buttons on hover, better empty state
@@ -106,6 +117,7 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - [x] `prompt-forge.tsx` — removed `ForgeHero` section entirely, reordered sections (Navbar → Generator → Vault → Features → Footer), wired `onOpenSettings`/`onOpenVersions`/`hasGeneratedPrompt` to `ForgeNavbar`
 
 ### Visual Design Polish
+
 - [x] Noise overlay (`/noise.svg`) added to forge page root, generator, vault, features, and footer for cohesive texture
 - [x] Ambient amber/orange glow blobs added at page level (matching landing page)
 - [x] `ForgeNavbar` — noise bg, amber underline hover effect on nav links, shadow glow on brand icon, improved mobile menu with dot indicators, hover bg on GitHub icon
@@ -115,6 +127,7 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - [x] `ForgeFooter` — full 4-column grid matching landing footer (Product/Resources/Legal + brand), noise overlay, shadow on brand icon, GitHub link in bottom bar
 
 ### Forge Hero (Re-added & Improved)
+
 - [x] `ForgeHero` — completely rewritten with landing-page-quality design: gradient heading ("Engineer every prompt."), "Powered by Gemini, Claude & more" badge, staggered entrance animations, browser chrome mockup showing input/output panels with shimmer skeleton placeholder, ember-effect primary CTA + secondary "Browse Templates" CTA
 - [x] `prompt-forge.tsx` — re-imported `ForgeHero`, placed between Navbar and Generator, wired `onBrowseGallery` to gallery modal
 - [x] `forge-generator.tsx` — reduced `pt-28` to `pt-16` to account for hero above
@@ -124,6 +137,7 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 - None currently
 
 ## Next Steps
+
 - Monitor for any regression after the improvement sprint
 - Evaluate if the extracted hooks have the right API surface
 - Consider adding Crypto subtle tests (skipped due to jsdom limitations)
@@ -132,6 +146,7 @@ Feature work — 9-phase remediation plan (completed), test infrastructure, UI p
 ## Recent
 
 ### Open-Source Readiness (May 2026)
+
 - [x] `package.json` — added description, license (MIT), author, keywords, bugs/homepage URLs
 - [x] `.env.example` — restored and added to `.gitignore` exception
 - [x] `README.md` — overhauled with forge logo SVG hero, filled all feature `<details>` blocks, added Anthropic + Codex to tech stack/provider config/data persistence tables, fixed Next.js version badges, fixed CI badge URL to `kapsarovL`

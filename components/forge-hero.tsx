@@ -8,7 +8,7 @@ export function ForgeHero() {
     <section className="relative pt-28 md:pt-36 pb-16 md:pb-20 px-6 overflow-hidden">
       <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.06] mix-blend-overlay pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto flex flex-col items-center text-center">
+      <div className="max-w-350 mx-auto flex flex-col items-center text-center">
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -31,7 +31,7 @@ export function ForgeHero() {
         >
           Engineer every
           <br />
-          <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent">
             prompt.
           </span>
         </motion.h1>

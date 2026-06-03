@@ -19,6 +19,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay" />
       </div>
 
+
       <Navbar />
       <Hero />
       <FeaturesSection />

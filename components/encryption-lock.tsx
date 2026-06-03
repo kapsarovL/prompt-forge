@@ -92,7 +92,7 @@ export function EncryptionLock({ onUnlock }: EncryptionLockProps) {
             <button
               onClick={handleUnlock}
               disabled={!passphrase.trim() || isUnlocking}
-              className="w-full py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-xl shadow-[0_0_24px_-6px_rgba(245,158,11,0.15)] hover:shadow-[0_0_32px_-4px_rgba(245,158,11,0.35)] hover:from-amber-500 hover:to-orange-600 transition-all active:scale-[0.97] disabled:opacity-50 disabled:shadow-none disabled:bg-zinc-800 disabled:from-zinc-800 disabled:to-zinc-800 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-linear-to-r from-amber-400 to-orange-500 text-white font-bold rounded-xl shadow-[0_0_24px_-6px_rgba(245,158,11,0.15)] hover:shadow-[0_0_32px_-4px_rgba(245,158,11,0.35)] hover:from-amber-500 hover:to-orange-600 transition-all active:scale-[0.97] disabled:opacity-50 disabled:shadow-none disabled:bg-zinc-800 disabled:from-zinc-800 disabled:to-zinc-800 flex items-center justify-center gap-2"
             >
               {isUnlocking ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

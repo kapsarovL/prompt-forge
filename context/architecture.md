@@ -386,6 +386,7 @@ See `context/progress-tracker.md` for planned architectural changes, including:
 - Offline capability
 
 **Completed architectural improvements:**
+
 - ✅ API service layer extracted (hooks/use-* + lib/storage, lib/crypto, lib/sanitize)
 - ✅ Request cancellation (AbortController) on all 4 providers
 - ✅ Encryption for stored API keys (AES-256-GCM + PBKDF2)

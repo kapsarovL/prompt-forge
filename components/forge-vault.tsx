@@ -84,7 +84,7 @@ export function ForgeVault(props: ForgeVaultProps) {
         >
           <div className="space-y-2">
             <h2 className="text-3xl font-semibold tracking-wide">
-              <span className="bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-amber-200 via-amber-400 to-orange-400 bg-clip-text text-transparent">
                 Vault
               </span>
             </h2>

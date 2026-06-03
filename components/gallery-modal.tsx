@@ -98,7 +98,7 @@ export function GalleryModal({
                   name="gallery-category"
                   value={galleryCategory}
                   onChange={e => setGalleryCategory(e.target.value)}
-                  className="bg-gradient-to-b from-zinc-800/60 to-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-amber-500/50 focus:shadow-[0_0_20px_-10px_rgba(245,158,11,0.3)] hover:border-white/20 transition-all min-w-[140px] cursor-pointer"
+                  className="bg-linear-to-b from-zinc-800/60 to-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-amber-500/50 focus:shadow-[0_0_20px_-10px_rgba(245,158,11,0.3)] hover:border-white/20 transition-all min-w-35 cursor-pointer"
                 >
                   <option value="all" className="bg-zinc-900 text-zinc-200">All Categories</option>
                   {categories.map(c => (
