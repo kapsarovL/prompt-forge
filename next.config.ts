@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
               `script-src 'self' 'unsafe-eval' 'unsafe-inline'${cspAssetOrigins ? ' ' + cspAssetOrigins : ''}`,
               `style-src 'self' 'unsafe-inline'${cspAssetOrigins ? ' ' + cspAssetOrigins : ''}`,
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://api.anthropic.com https://api.openai.com https://opencode.ai",
+              `connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://api.anthropic.com https://api.openai.com https://opencode.ai${cspAssetOrigins ? ' ' + cspAssetOrigins : ''}`,
               `font-src 'self'${cspAssetOrigins ? ' ' + cspAssetOrigins : ''}`,
               "base-uri 'self'",
               "form-action 'self'",
