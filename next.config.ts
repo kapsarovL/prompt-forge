@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+const cspAssetOrigins = process.env.CSP_ASSET_ORIGINS || '';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typescript: {
@@ -42,11 +44,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
+              `script-src 'self' 'unsafe-eval' 'unsafe-inline'${cspAssetOrigins ? ' ' + cspAssetOrigins : ''}`,
+              `style-src 'self' 'unsafe-inline'${cspAssetOrigins ? ' ' + cspAssetOrigins : ''}`,
               "img-src 'self' data: blob: https:",
               "connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://api.anthropic.com https://api.openai.com https://opencode.ai",
-              "font-src 'self'",
+              `font-src 'self'${cspAssetOrigins ? ' ' + cspAssetOrigins : ''}`,
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'none'",
