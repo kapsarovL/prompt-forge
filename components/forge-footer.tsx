@@ -10,12 +10,14 @@ const FOOTER_LINKS = {
     { label: "Landing", href: "/" },
   ],
   Resources: [
-    { label: "Gemini API", href: "https://ai.google.dev/" },
+    { label: "Gemini", href: "https://ai.google.dev/" },
+    { label: "Claude", href: "https://www.anthropic.com" },
+    { label: "GPT", href: "https://platform.openai.com/" },
     { label: "OpenCode", href: "https://opencode.ai" },
-    { label: "Anthropic", href: "https://anthropic.com" },
   ],
   Legal: [
-    { label: "MIT License", href: "https://github.com/anomalyco/prompt-forge/blob/main/LICENSE" },
+    { label: "Terms", href: "/#terms" },
+    { label: "Privacy", href: "/#terms" },
     { label: "GitHub", href: "https://github.com/prismaflux/prompt-forge" },
   ],
 };
@@ -71,7 +73,7 @@ export function ForgeFooter() {
 
         <div className="mt-16 pt-8 border-t border-zinc-900/50 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[10px] font-mono tracking-widest uppercase text-zinc-600">
-            Forge your prompts &bull; {new Date().getFullYear()}
+            Free trial &amp; $5 one-time &bull; {new Date().getFullYear()}
           </p>
           <a
             href="https://github.com/prismaflux/prompt-forge"
@@ -79,7 +81,7 @@ export function ForgeFooter() {
             rel="noopener noreferrer"
             className="text-[10px] text-zinc-600 hover:text-zinc-300 transition-colors flex items-center gap-1.5"
           >
-            <Github className="w-3 h-3" /> Open source &mdash; MIT licensed
+            <Github className="w-3 h-3" /> Source on GitHub
           </a>
         </div>
       </div>

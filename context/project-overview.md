@@ -2,11 +2,11 @@
 
 ## Product Definition
 
-PromptForge is a **client-side AI prompt engineering tool** that helps users craft, refine, evaluate, and optimize prompts for large language models. It provides a craft-focused workspace where users iterate on prompts with AI assistance, then store and manage their results.
+PromptForge is a **client-side AI prompt crafting tool** for freelancers. It helps users craft, refine, evaluate, and optimize prompts for large language models. It provides a focused workspace where users iterate on prompts with AI assistance, then store and manage their results.
 
 ## Goals
 
-1. **Provide a dedicated prompt engineering workspace** — a focused environment for iterating on prompt quality, distinct from generic chat interfaces
+1. **Provide a dedicated prompt crafting workspace** — a focused environment for iterating on prompt quality, distinct from generic chat interfaces
 2. **Support multiple AI providers interchangeably** — Gemini, Anthropic Claude, OpenCode, and OpenAI Codex
 3. **Enable prompt quality measurement** — automated evaluation with structured criteria (clarity, specificity, misinterpretation risk)
 4. **Preserve prompt history** — automatic version tracking, recallable history, and user-saved templates
@@ -17,9 +17,9 @@ PromptForge is a **client-side AI prompt engineering tool** that helps users cra
 
 ### Primary Audience
 
-- **Developers** crafting system prompts for code generation, architecture, and debugging tasks
+- **Freelancers** crafting prompts for client work, proposals, and project deliverables
 - **Content creators** iterating on marketing copy, storytelling, and creative briefs
-- **Data analysts** building structured prompts for data interpretation and research
+- **Independent professionals** building structured prompts for research, analysis, and communication
 
 ### User Needs
 

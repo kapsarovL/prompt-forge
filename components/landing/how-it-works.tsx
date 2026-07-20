@@ -13,7 +13,7 @@ const STEPS = [
   {
     number: "02",
     title: "AI Forges the Prompt",
-    description: "Gemini transforms your rough idea into a structured, high-quality prompt optimized for your goal.",
+    description: "AI transforms your rough idea into a structured, high-quality prompt optimized for your goal.",
     icon: Sparkles,
   },
   {

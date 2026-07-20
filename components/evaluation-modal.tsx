@@ -54,7 +54,7 @@ export function EvaluationModal({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Prompt Evaluation</h3>
-                  <p className="text-xs text-zinc-500">AI-driven analysis of your engineered prompt.</p>
+                  <p className="text-xs text-zinc-500">AI-driven analysis of your crafted prompt.</p>
                 </div>
               </div>
               <button

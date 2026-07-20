@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, Key, Shield, Database, RefreshCw, Globe, CreditCard } from "lucide-react";
+import { ChevronDown, Key, Shield, Database, RefreshCw, Globe, CreditCard, Wallet, RotateCcw, FlaskConical } from "lucide-react";
 
 const FAQS = [
   {
@@ -12,7 +12,7 @@ const FAQS = [
   },
   {
     question: "Do I need my own API key?",
-    answer: "Yes. PromptForge runs entirely in your browser and calls AI providers directly from the client. You supply your own API key for Gemini, Anthropic, OpenAI, or OpenCode — no data passes through any intermediary server.",
+    answer: "Yes. PromptForge runs entirely in your browser and calls AI providers directly from the client. You supply your own API key for Gemini, Claude, GPT, or OpenCode — no data passes through any intermediary server.",
     icon: Key,
   },
   {
@@ -22,7 +22,7 @@ const FAQS = [
   },
   {
     question: "How is PromptForge different from ChatGPT?",
-    answer: "PromptForge is a dedicated prompt engineering workspace, not a chat interface. It provides structured evaluation, version history, template management, and iterative refinement tools that generic chat UIs don't offer.",
+    answer: "PromptForge is a dedicated prompt crafting workspace, not a chat interface. It provides structured evaluation, version history, template management, and iterative refinement tools that generic chat UIs don't offer.",
     icon: Globe,
   },
   {
@@ -31,9 +31,24 @@ const FAQS = [
     icon: Database,
   },
   {
-    question: "Is PromptForge free?",
-    answer: "PromptForge is free and open source (MIT license). You only pay for the AI API usage from your chosen provider. No hidden costs, no subscription tiers, no feature gates.",
+    question: "How much does PromptForge cost?",
+    answer: "Start with a 7-day free trial — no credit card required. After that, it's a one-time $5 purchase. Pay once, use forever. All future updates included. You still need your own API keys for the AI providers you use.",
     icon: CreditCard,
+  },
+  {
+    question: "What payment methods do you accept?",
+    answer: "We accept all major credit cards, debit cards, and digital wallets through Stripe. Payment is processed securely — we never see or store your card details.",
+    icon: Wallet,
+  },
+  {
+    question: "What is the refund policy?",
+    answer: "If PromptForge isn't right for you, contact us within 30 days for a full refund. No questions asked.",
+    icon: RotateCcw,
+  },
+  {
+    question: "Can I try before I buy?",
+    answer: "Yes! Start with a 7-day free trial — no credit card needed. After the trial, PromptForge is a one-time $5 purchase. You'll need your own API keys from Gemini, Claude, GPT, or OpenCode to generate prompts.",
+    icon: FlaskConical,
   },
 ];
 

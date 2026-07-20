@@ -49,7 +49,7 @@ PromptForge is a **client-side only** Next.js 16 application (React 19) with zer
 - **Zero backend**: No API routes, no database, no server-side data processing
 - **Static-first**: The forge page is fully client-rendered ("use client")
 - **Single-page application**: Within `/forge`, all navigation is state-driven (modal toggles, scroll sections)
-- **All logic in one orchestrator**: `components/prompt-forge.tsx` holds 33 state variables and all business logic
+- **State extracted into hooks**: `components/prompt-forge.tsx` (285 lines) composes 5 custom hooks that own all state
 
 ---
 
@@ -60,7 +60,10 @@ PromptForge is a **client-side only** Next.js 16 application (React 19) with zer
 ```bash
 RootLayout (app/layout.tsx)
   ├── Home (app/page.tsx) — landing/marketing page
-  │     └── FeatureCard (×6)
+  │     ├── Navbar, Hero, FeaturesSection
+  │     ├── HowItWorksSection, WhyPromptForgeSection
+  │     ├── PricingSection, FAQSection, Footer
+  │     └── ScrollProgress
   │
   └── PromptForgePage (app/forge/page.tsx)
         └── ErrorBoundary
@@ -69,14 +72,16 @@ RootLayout (app/layout.tsx)
                     ├── ForgeHero — animated headline + CTA
                     ├── ForgeFeatures — feature highlight cards
                     │     └── FeatureCard (×3)
-                    ├── ForgeGenerator — main input/output panel (361 lines)
+                    ├── ForgeGenerator — main input/output panel (486 lines)
                     ├── ForgeVault — history browser
                     ├── ForgeFooter — branding + GitHub link
                     ├── VersionsModal — version history
                     ├── GalleryModal — template gallery
                     ├── EvaluationModal — evaluation results
                     ├── FeedbackModal — user feedback form
-                    ├── SettingsModal — API key management
+                    ├── SettingsModal — API key management (300 lines)
+                    │     ├── ProviderSettings
+                    │     └── EncryptionSettings
                     └── ForgeToast — notification popup
 ```
 
@@ -85,21 +90,24 @@ RootLayout (app/layout.tsx)
 | Component | Role | State Owner | Lines |
 
 |-----------|------|-------------|-------|
-| `PromptForge` | Orchestrator — all state, all handlers | Self | 705 |
-| `ForgeGenerator` | Primary input/output panel | PromptForge (props) | 361 |
-| `SettingsModal` | API key + model config | PromptForge (props) + local transient state | 346 |
-| `ForgeVault` | History list with search/pagination | PromptForge (props) | 145 |
-| `GalleryModal` | Template browser with filters | PromptForge (props) | 168 |
-| `EvaluationModal` | Evaluation results with auto-fix | PromptForge (props) | 167 |
-| `FeedbackModal` | Star rating + comment form | PromptForge (props) + local transient | 109 |
-| `VersionsModal` | Version history browser | PromptForge (props) | 93 |
-| `ForgeHero` | Landing section for forge page | PromptForge (props) | 71 |
-| `ForgeNavbar` | Top navigation bar | PromptForge (props) | 41 |
-| `ForgeToast` | Notification popup | PromptForge (props) | 41 |
-| `ForgeFeatures` | Feature cards section | Self-contained | 46 |
-| `ForgeFooter` | Footer | Self-contained | 20 |
-| `FeatureCard` | Reusable card (number + title + desc) | Self-contained | 17 |
-| `ErrorBoundary` | React class-based error boundary | Self (hasError) | 46 |
+| `PromptForge` | Orchestrator — composes 5 hooks, renders children | Hooks (via composed state) | 285 |
+| `ForgeGenerator` | Primary input/output panel | PromptForge (props) | 486 |
+| `SettingsModal` | API key + model config | PromptForge (props) + local transient state | 300 |
+| `ForgeVault` | History list with search/pagination | PromptForge (props) | 200 |
+| `GalleryModal` | Template browser with filters | PromptForge (props) | 177 |
+| `EvaluationModal` | Evaluation results with auto-fix | PromptForge (props) | 173 |
+| `EncryptionLock` | Unlock overlay for encrypted API keys | Local state | 132 |
+| `ForgeNavbar` | Top navigation bar | PromptForge (props) | 121 |
+| `FeedbackModal` | Star rating + comment form | PromptForge (props) + local transient | 113 |
+| `VersionsModal` | Version history browser | PromptForge (props) | 98 |
+| `ForgeSkeleton` | Loading skeleton with shimmer | Self-contained | 87 |
+| `ForgeFooter` | Footer | Self-contained | 88 |
+| `ForgeFeatures` | Feature cards section | Self-contained | 66 |
+| `ForgeToast` | Notification popup | PromptForge (props) | 42 |
+| `ErrorBoundary` | React class-based error boundary | Self (hasError) | 45 |
+| `ForgeHero` | Landing section for forge page | PromptForge (props) | 41 |
+| `FeatureCard` | Reusable card (number + title + desc) | Self-contained | 31 |
+| `StorageInit` | Client component to init schema migration | Self-contained | 16 |
 
 ### Data Flow
 
@@ -112,7 +120,7 @@ RootLayout (app/layout.tsx)
 
 ## Storage Model
 
-### localStorage Keys (13 total)
+### localStorage Keys (15 total)
 
 | Key | Type | Purpose |
 
@@ -336,15 +344,23 @@ prompt-forge/
 │   └── forge/
 │       └── page.tsx         — Forge app shell (ErrorBoundary + PromptForge)
 ├── components/
-│   ├── prompt-forge.tsx     — MAIN ORCHESTRATOR (705 lines, 33 states)
-│   ├── forge-generator.tsx  — Input/output panel (361 lines)
+│   ├── prompt-forge.tsx     — MAIN ORCHESTRATOR (285 lines)
+│   ├── forge-generator.tsx  — Input/output panel (486 lines)
 │   ├── forge-navbar.tsx     — Top navigation
 │   ├── forge-hero.tsx       — Hero section
 │   ├── forge-features.tsx   — Features section
-│   ├── forge-vault.tsx      — History browser (145 lines)
+│   ├── forge-vault.tsx      — History browser (201 lines)
 │   ├── forge-footer.tsx     — Footer
 │   ├── forge-toast.tsx      — Notifications
-│   ├── settings-modal.tsx   — API key management (346 lines)
+│   ├── settings-modal.tsx   — API key management (300 lines)
+│   ├── settings/
+│   │   ├── provider-settings.tsx — Per-provider config panels
+│   │   ├── encryption-settings.tsx — Encryption toggle UI
+│   │   └── types.ts          — Shared settings types & constants
+│   ├── landing/
+│   │   ├── hero.tsx, features.tsx, how-it-works.tsx
+│   │   ├── why-promptforge.tsx, pricing.tsx, faq.tsx
+│   │   ├── navbar.tsx, footer.tsx, scroll-progress.tsx
 │   ├── gallery-modal.tsx    — Template gallery (168 lines)
 │   ├── evaluation-modal.tsx — Evaluation results (167 lines)
 │   ├── versions-modal.tsx   — Version history
@@ -353,6 +369,7 @@ prompt-forge/
 │   └── error-boundary.tsx   — Error boundary
 ├── lib/
 │   ├── types.ts             — Types, constants (Provider, CATEGORIES, MODELS, etc.)
+│   ├── api.ts               — Unified API dispatcher (358 lines)
 │   ├── gemini.ts            — Gemini API client (SDK, retry, helpers)
 │   ├── anthropic.ts         — Anthropic API client (SDK, retry, helpers)
 │   ├── codex.ts             — Codex API client (fetch-based, retry, helpers)

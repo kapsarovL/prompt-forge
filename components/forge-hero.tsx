@@ -18,7 +18,7 @@ export function ForgeHero() {
         >
           <Zap className="w-3 h-3 text-amber-400" />
           <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-400">
-            Powered by Gemini, Claude &amp; more
+            Multi-model prompt crafting
           </span>
         </motion.div>
 
@@ -29,12 +29,21 @@ export function ForgeHero() {
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="text-5xl md:text-7xl lg:text-[88px] font-medium tracking-tighter text-white leading-[0.88]"
         >
-          Engineer every
+          Craft every
           <br />
           <span className="bg-linear-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent">
             prompt.
           </span>
         </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-6 text-sm text-zinc-500 font-light"
+        >
+          Bring your own API keys for Gemini, Claude, GPT, or OpenCode.
+        </motion.p>
       </div>
     </section>
   );

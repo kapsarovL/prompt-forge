@@ -8,6 +8,7 @@ import { Sparkles, Menu, X } from "lucide-react";
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
+  { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ];
 
@@ -37,7 +38,7 @@ export function Navbar() {
           href="/forge"
           className="text-xs font-semibold tracking-widest uppercase text-zinc-400 hover:text-white transition-colors"
         >
-          Launch App
+          Free 7-Day Trial
         </Link>
       </div>
 
@@ -74,7 +75,7 @@ export function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="px-4 py-3 text-sm font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-xl transition-colors mt-1"
               >
-                Launch App
+                Free 7-Day Trial
               </Link>
             </div>
           </motion.div>

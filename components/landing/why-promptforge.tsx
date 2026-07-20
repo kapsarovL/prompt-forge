@@ -5,7 +5,7 @@ import { Server, Sliders, History, ShieldCheck } from "lucide-react";
 
 const REASONS = [
   { title: "Zero Backend", description: "Everything runs in your browser. No accounts, no servers, no data leaves your machine.", icon: Server },
-  { title: "Multiple AI Providers", description: "Gemini, OpenCode, Anthropic, or OpenAI — swap providers without changing your workflow.", icon: Sliders },
+  { title: "Multiple AI Providers", description: "Gemini, Claude, GPT, OpenCode — swap providers without changing your workflow.", icon: Sliders },
   { title: "Version Tracking", description: "Every generation is automatically saved. Browse, compare, and restore any version.", icon: History },
   { title: "Built-in Evaluation", description: "Deep analysis across clarity, specificity, and misinterpretation risk — with one-click auto-fix.", icon: ShieldCheck },
 ];

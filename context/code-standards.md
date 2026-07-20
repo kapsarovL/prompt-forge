@@ -133,7 +133,7 @@ try {
 
 - **API errors**: Use `getErrorMessage()` helper for user-friendly messages
 - **localStorage parse errors**: Silent catch — no error displayed for corrupt data
-- **No AbortController** — request cancellation not implemented yet
+- **AbortController** — implemented on all 4 providers with 30s timeout, passed through `signal` parameter
 
 ## API Client Standards
 
@@ -161,16 +161,16 @@ try {
 
 ## File Size Guidelines
 
-- Components should stay under 400 lines; `PromptForge` at 705 lines is identified for future refactoring
+- Components should stay under 400 lines; `ForgeGenerator` (486 lines) is the largest and should be split
 - Library modules under 150 lines
 - Types file under 100 lines
 - Consider extraction when a file exceeds these thresholds
 
 ## Testing Standards
 
-- **No test infrastructure exists yet** — no test runner, no test files
-- When added: Vitest for unit tests, Playwright for e2e
-- Tests should be co-located: `component-name.test.tsx` next to source
+- **Vitest** for unit tests (`test/lib/`, `test/hooks/`, `test/components/`), **Playwright** for e2e (`test/e2e/`)
+- Test files live in `test/` directory mirroring source structure (not co-located)
+- Run with `pnpm test` (Vitest) or `pnpm test:e2e` (Playwright)
 
 ## Git & Workflow
 

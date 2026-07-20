@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { Search, ArrowRight, Copy, Trash2, Archive } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { MODEL_LABELS } from "@/lib/types";
 
 interface PromptHistory {
   id: string;
@@ -88,7 +89,7 @@ export function ForgeVault(props: ForgeVaultProps) {
                 Vault
               </span>
             </h2>
-            <p className="text-zinc-500 font-light">Your previously engineered prompts.</p>
+            <p className="text-zinc-500 font-light">Your saved prompts.</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -151,7 +152,7 @@ export function ForgeVault(props: ForgeVaultProps) {
                         {getCategoryLabel(item.category)}
                       </span>
                       <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 bg-amber-500/10 text-amber-400 rounded-md">
-                        {item.model.split('-')[1] || item.model}
+                        {MODEL_LABELS[item.model] ?? item.model}
                       </span>
                     </div>
                     <span className="text-[10px] text-zinc-700 font-mono">

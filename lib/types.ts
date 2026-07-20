@@ -41,7 +41,7 @@ export interface ModelOption {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: "coding", label: "Coding", icon: Terminal, description: "Software development, debuging, and architecture" },
+  { id: "coding", label: "Coding", icon: Terminal, description: "Client work, proposals, technical briefs, and project scoping" },
   { id: "creative", label: "Creative", icon: PenTool, description: "Writing, storytelling, and content creation" },
   { id: "analysis", label: "Analysis", icon: BarChart, description: "Data interpretation, research, and summaries" },
   { id: "general", label: "General", icon: MessageSquare, description: "Everyday tasks, Q&A, and general assistance" },
@@ -90,6 +90,14 @@ export const CODEX_MODELS: CodexModelOption[] = [
   { id: "gpt-4o-mini", label: "GPT-4o Mini", description: "Fast, cost-effective" },
   { id: "o3-mini", label: "o3-mini", description: "Reasoning, complex tasks" },
 ];
+
+/** Flat lookup of model ID → display label for UI badges. */
+export const MODEL_LABELS: Record<string, string> = Object.fromEntries([
+  ...MODELS.map(m => [m.id, m.label]),
+  ...OPENCODE_MODELS.map(m => [m.id, m.label]),
+  ...ANTHROPIC_MODELS.map(m => [m.id, m.label]),
+  ...CODEX_MODELS.map(m => [m.id, m.label]),
+]);
 
 export interface Template {
   text: string;

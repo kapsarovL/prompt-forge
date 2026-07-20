@@ -98,7 +98,7 @@ After each meaningful implementation change:
 
 ## Monitoring & Quality
 
-- No testing infrastructure exists yet — manual verification required
-- CI pipeline runs `pnpm lint` and `pnpm build` on push/PR to `main`
+- Vitest for unit tests, Playwright for e2e — run `pnpm test` and `pnpm test:e2e`
+- CI pipeline runs `pnpm lint`, `pnpm test`, and `pnpm build` on push/PR to `main`
 - Prettier formatting should be run before commits (`pnpm format`)
 - ESLint 9 flat config with `next/core-web-vitals` ruleset

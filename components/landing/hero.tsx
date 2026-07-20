@@ -14,7 +14,7 @@ export function Hero() {
         className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-zinc-800/60 backdrop-blur-md mb-10"
       >
         <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-        <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-400">Gemini 3.1 Pro Preview</span>
+        <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-400">Multi-model prompt crafting</span>
       </motion.div>
 
       <motion.h1
@@ -36,15 +36,15 @@ export function Hero() {
         transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         className="text-lg md:text-2xl text-zinc-400 max-w-2xl mx-auto mb-12 font-light tracking-tight leading-relaxed"
       >
-        Transform natural language into precision-engineered prompts for Gemini, Claude, and beyond.
-        Built for developers, creators, and analysts.
+        Transform natural language into precision-crafted prompts for Gemini, Claude, GPT, OpenCode, and beyond.
+        Built for freelancers, creators, and independent professionals.
       </motion.p>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+        className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-4 mb-3"
       >
         <Link
           href="/forge"
@@ -61,6 +61,7 @@ export function Hero() {
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </a>
       </motion.div>
+      <span className="text-xs text-zinc-600 mb-20">7-day free trial &middot; then $5 &middot; Bring your own API keys</span>
 
       {/* Product Mockup */}
       <motion.div

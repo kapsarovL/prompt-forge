@@ -7,6 +7,7 @@ import { FeaturesSection } from "@/components/landing/features";
 import { HowItWorksSection } from "@/components/landing/how-it-works";
 import { WhyPromptForgeSection } from "@/components/landing/why-promptforge";
 import { FAQSection } from "@/components/landing/faq";
+import { PricingSection } from "@/components/landing/pricing";
 import { Footer } from "@/components/landing/footer";
 
 export default function Home() {
@@ -25,6 +26,7 @@ export default function Home() {
       <FeaturesSection />
       <HowItWorksSection />
       <WhyPromptForgeSection />
+      <PricingSection />
       <FAQSection />
       <Footer />
     </main>

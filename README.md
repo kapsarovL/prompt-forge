@@ -79,7 +79,7 @@
   <text x="400" y="175" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="68" font-weight="800" fill="url(#title-grad)" letter-spacing="-1">PromptForge</text>
 
   <!-- Subtitle -->
-  <text x="400" y="220" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="400" fill="#a1a1aa" letter-spacing="2">AI Prompt Engineering Toolkit</text>
+  <text x="400" y="220" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="400" fill="#a1a1aa" letter-spacing="2">AI Prompt Crafting for Freelancers</text>
 
   <!-- Ambent divider -->
   <line x1="340" y1="245" x2="460" y2="245" stroke="#f59e0b" stroke-width="1" opacity="0.6"/>
@@ -133,11 +133,11 @@
 
 ## Overview
 
-**PromptForge** is a client-side prompt engineering workspace for crafting, refining, evaluating, and optimizing LLM prompts. It runs entirely in the browser — zero backend, zero database, zero user accounts.
+**PromptForge** is a client-side prompt crafting workspace for freelancers. It helps you craft, refine, evaluate, and optimize LLM prompts. It runs entirely in the browser — zero backend, zero database, zero user accounts.
 
 Convert natural language intent into structured, high-performing prompts. Iterate with AI assistance. Evaluate against objective criteria. Save and organize what works.
 
-Built for developers, content creators, and analysts who want precision over guesswork.
+Built for freelancers, content creators, and independent professionals who want precision over guesswork.
 
 ### Key Philosophy
 

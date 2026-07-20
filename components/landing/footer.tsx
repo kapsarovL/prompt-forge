@@ -10,13 +10,14 @@ const FOOTER_LINKS = {
     { label: "How It Works", href: "#how-it-works" },
   ],
   Resources: [
-    { label: "Gemini API", href: "https://ai.google.dev/" },
+    { label: "Gemini", href: "https://ai.google.dev/" },
+    { label: "Claude", href: "https://www.anthropic.com" },
+    { label: "GPT", href: "https://platform.openai.com/" },
     { label: "OpenCode", href: "https://opencode.ai" },
-    { label: "Anthropic", href: "https://anthropic.com" },
   ],
   Legal: [
-    { label: "MIT License", href: "https://github.com/anomalyco/prompt-forge/blob/main/LICENSE" },
-    { label: "Privacy", href: "#" },
+    { label: "Privacy", href: "/" },
+    { label: "Terms", href: "#terms" },
   ],
 };
 
@@ -70,10 +71,10 @@ export function Footer() {
 
         <div className="mt-16 pt-8 border-t border-zinc-900/50 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[10px] font-mono tracking-widest uppercase text-zinc-600">
-            Built with Gemini API &bull; {new Date().getFullYear()}
+            Multi-provider &bull; {new Date().getFullYear()}
           </p>
           <p className="text-[10px] text-zinc-700">
-            Open source &mdash; MIT licensed
+            Free trial &amp; $5 one-time
           </p>
         </div>
       </div>

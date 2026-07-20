@@ -80,7 +80,7 @@ export function useProviderState() {
     try {
       const ai = new GoogleGenAI({ apiKey: key });
       await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.1-pro-preview",
         contents: "Reply with only the word OK.",
         config: { temperature: 0 },
       });
