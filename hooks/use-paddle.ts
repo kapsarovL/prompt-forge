@@ -16,13 +16,13 @@ let paddlePromise: Promise<Paddle | null> | undefined;
 
 function getPaddleInstance(): Promise<Paddle | null> {
   if (!paddlePromise) {
-    const sellerId = process.env.NEXT_PUBLIC_PADDLE_SELLER_ID;
-    if (!sellerId) {
+    const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
+    if (!token) {
       paddlePromise = Promise.resolve(null);
       return paddlePromise;
     }
     paddlePromise = initializePaddle({
-      seller: parseInt(sellerId, 10),
+      token,
       environment: 'production',
     }).then((p) => p ?? null).catch(() => null);
   }
