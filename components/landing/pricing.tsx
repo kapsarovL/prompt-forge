@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { Check, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { PaddleCheckoutButton } from "@/components/paddle-checkout-button";
 
 const FEATURES = [
   "Unlimited prompt generation",
@@ -48,9 +48,9 @@ export function PricingSection() {
               <p className="text-sm font-medium text-zinc-400 mb-2">PromptForge</p>
               <div className="flex items-baseline justify-center gap-1 mb-3">
                 <span className="text-5xl font-semibold text-white">$5</span>
-                <span className="text-sm text-zinc-500">after free trial</span>
+                <span className="text-sm text-zinc-500">one-time</span>
               </div>
-              <p className="text-sm text-zinc-500">7-day free trial &middot; then $5 one-time. No subscriptions.</p>
+              <p className="text-sm text-zinc-500">Pay once. Use forever. No subscriptions.</p>
             </div>
 
             <div className="space-y-3.5 mb-8">
@@ -62,13 +62,13 @@ export function PricingSection() {
               ))}
             </div>
 
-            <Link
-              href="/forge"
+            <PaddleCheckoutButton
+              priceId={process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? "pri_01kxzjy13k8y1r5qs70f2m7e8h"}
               className="group w-full flex items-center justify-center gap-2 py-3.5 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-all active:scale-[0.98]"
             >
-              Free 7-day trial
+              Buy for $5
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+            </PaddleCheckoutButton>
 
             <p className="text-center text-[11px] text-zinc-600 mt-4">
               Bring your own API keys. We never store or see them.
