@@ -16,8 +16,9 @@ const FOOTER_LINKS = {
     { label: "OpenCode", href: "https://opencode.ai" },
   ],
   Legal: [
-    { label: "Terms", href: "/#terms" },
-    { label: "Privacy", href: "/#terms" },
+    { label: "Terms", href: "/terms" },
+    { label: "Privacy", href: "/privacy" },
+    { label: "Refunds", href: "/refund" },
     { label: "GitHub", href: "https://github.com/prismaflux/prompt-forge" },
   ],
 };

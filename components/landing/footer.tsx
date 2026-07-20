@@ -16,8 +16,9 @@ const FOOTER_LINKS = {
     { label: "OpenCode", href: "https://opencode.ai" },
   ],
   Legal: [
-    { label: "Privacy", href: "/" },
-    { label: "Terms", href: "#terms" },
+    { label: "Terms", href: "/terms" },
+    { label: "Privacy", href: "/privacy" },
+    { label: "Refunds", href: "/refund" },
   ],
 };
 
