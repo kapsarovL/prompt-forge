@@ -6,9 +6,9 @@ test.describe("Landing page", () => {
     await expect(page.locator("h1")).toBeVisible();
   });
 
-  test("Launch App link navigates to /forge", async ({ page }) => {
+  test("Start Forging link navigates to /forge", async ({ page }) => {
     await page.goto("/");
-    await page.getByText("Launch App").click();
+    await page.getByText("Start Forging").click();
     await expect(page).toHaveURL("/forge");
   });
 

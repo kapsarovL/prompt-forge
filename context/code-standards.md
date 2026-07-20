@@ -161,7 +161,7 @@ try {
 
 ## File Size Guidelines
 
-- Components should stay under 400 lines; `ForgeGenerator` (486 lines) is the largest and should be split
+- All components under 400 lines. `ForgeGenerator` was split into `forge-generator.tsx` (190 lines), `forge-input-panel.tsx` (251 lines), and `forge-output-panel.tsx` (185 lines)
 - Library modules under 150 lines
 - Types file under 100 lines
 - Consider extraction when a file exceeds these thresholds

@@ -35,14 +35,15 @@ Build passes clean with Tailwind v4 migration. Fix CSP violations for Webflow/Cl
 - ✅ FAQ: 3 new questions — payment methods, refund policy, trial period
 - ✅ Settings modal: DEFAULT_MODELS constant replaces all hardcoded model IDs
 - ✅ Pricing changed: $10 one-time → 7-day free trial, then $5 one-time (all 9 references updated)
+- ✅ Audience pivot: developer/engineer → freelancer across all user-facing copy and context docs
+- ✅ Playwright e2e tests: 11 tests (8 forge-flow + 3 landing) — all passing
 
 ## Đang làm
 - (none)
 
 ## Tiếp theo
-- [ ] Deploy with `CSP_ASSET_ORIGINS=https://*.cosmic.webflow.services` set in the deployment environment
-- [ ] Verify deployed site loads fonts, styles, and scripts without CSP violations
-- [ ] Playwright forge-flow e2e tests
+- [ ] Deployment setup (Vercel or equivalent)
+- [ ] Additional e2e coverage: evaluation flow, refine flow, gallery save/delete
 
 ## Open Questions
 - (none)

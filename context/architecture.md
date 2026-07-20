@@ -29,7 +29,7 @@ PromptForge is a **client-side only** Next.js 16 application (React 19) with zer
 │                                                      │
 │  ┌──────────────────────────────────────────────────┐│
 │  │           State: React useState/useEffect          ││
-│  │      Persistence: localStorage (9 keys)            ││
+│  │      Persistence: localStorage (16 keys)           ││
 │  └──────────────────────────────────────────────────┘│
 │                                                      │
 │  ┌──────────────────────────────────────────────────┐│
@@ -186,14 +186,13 @@ PromptForge composes all 5 hooks, reducing orchestrator size by ~83%.
 - **No real-time collaboration**
 - **No request queuing or deduplication**
 - **No offline support** — localStorage persists but all features require network
-- **No encryption of stored API keys**
 
 ### API Client Boundaries
 
 - Both clients call their AI APIs **directly from the browser**
 - CORS must be enabled on the AI provider or the user must use a proxy
 - No API response caching (identical prompts re-fire every time)
-- No request cancellation (AbortController not used)
+- Request cancellation via AbortController on all 4 providers
 - Gemini retries 503/429 (×3, exponential backoff)
 - OpenCode retries 503 (×3, exponential backoff)
 
@@ -345,7 +344,10 @@ prompt-forge/
 │       └── page.tsx         — Forge app shell (ErrorBoundary + PromptForge)
 ├── components/
 │   ├── prompt-forge.tsx     — MAIN ORCHESTRATOR (285 lines)
-│   ├── forge-generator.tsx  — Input/output panel (486 lines)
+│   ├── forge-generator.tsx  — Orchestrator composing input + output panels (190 lines)
+│   ├── forge-input-panel.tsx — Input column: description, category, provider, model (251 lines)
+│   ├── forge-output-panel.tsx — Output column: toolbar, refine bar, output area (185 lines)
+│   ├── forge-generator-variants.ts — Shared animation variants (11 lines)
 │   ├── forge-navbar.tsx     — Top navigation
 │   ├── forge-hero.tsx       — Hero section
 │   ├── forge-features.tsx   — Features section
