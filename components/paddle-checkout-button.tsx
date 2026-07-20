@@ -41,6 +41,7 @@ export function PaddleCheckoutButton({
           displayMode: 'overlay',
           variant: 'one-page',
           theme: 'dark',
+          successUrl: `${window.location.origin}/welcome`,
         },
       });
       onCheckoutStarted?.();

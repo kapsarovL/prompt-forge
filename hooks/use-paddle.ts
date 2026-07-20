@@ -57,7 +57,7 @@ export function usePaddle() {
           displayMode: 'overlay',
           variant: 'one-page',
           theme: 'dark',
-          successUrl: '/welcome',
+          successUrl: `${window.location.origin}/welcome`,
         },
       });
     },
