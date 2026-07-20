@@ -41,10 +41,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              `script-src 'self' 'unsafe-eval' 'unsafe-inline'`,
+              `script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.paddle.com`,
               `style-src 'self' 'unsafe-inline'`,
               "img-src 'self' data: blob: https:",
-              `connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://api.anthropic.com https://api.openai.com https://opencode.ai`,
+              `connect-src 'self' https://*.paddle.com https://generativelanguage.googleapis.com https://*.googleapis.com https://api.anthropic.com https://api.openai.com https://opencode.ai`,
+              `frame-src https://*.paddle.com`,
               `font-src 'self'`,
               "base-uri 'self'",
               "form-action 'self'",

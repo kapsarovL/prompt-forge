@@ -39,6 +39,7 @@ export function PaddleCheckoutButton({
         ...(customerEmail ? { customer: { email: customerEmail } } : {}),
         settings: {
           displayMode: 'overlay',
+          variant: 'one-page',
           theme: 'dark',
         },
       });

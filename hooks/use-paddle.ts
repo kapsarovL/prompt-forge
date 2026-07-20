@@ -7,7 +7,7 @@ import { useEffect, useState, useCallback } from 'react';
  * Client-side Paddle.js hook.
  *
  * Initializes Paddle.js from CDN and exposes the instance for
- * opening checkout overlays.
+ * price preview and checkout overlays.
  *
  * Requires NEXT_PUBLIC_PADDLE_SELLER_ID in your env.
  */
@@ -55,7 +55,9 @@ export function usePaddle() {
         ...(customerEmail ? { customer: { email: customerEmail } } : {}),
         settings: {
           displayMode: 'overlay',
+          variant: 'one-page',
           theme: 'dark',
+          successUrl: '/welcome',
         },
       });
     },
