@@ -37,6 +37,7 @@
     "@anthropic-ai/sdk": "^0.98.0",
     "@google/genai": "^1.46.0",
     "@neondatabase/serverless": "^1.1.0",
+    "@paddle/paddle-js": "^1.6.4",
     "@paddle/paddle-node-sdk": "^3.8.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
