@@ -1,9 +1,0 @@
-{
-	"servers": {
-		"Blitzy Platform Documentation": {
-			"url": "https://docs.blitzy.com/mcp",
-			"type": "http"
-		}
-	},
-	"inputs": []
-}

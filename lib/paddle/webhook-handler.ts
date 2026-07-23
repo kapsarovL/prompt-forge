@@ -93,7 +93,7 @@ async function handleTransactionCompleted(event: TransactionCompletedEvent): Pro
   if (!customer) return;
 
   const firstItem = data.items[0];
-  const priceId = firstItem?.price?.id ?? 'pri_01kxzjy13k8y1r5qs70f2m7e8h';
+  const priceId = firstItem?.price?.id ?? '';
   const amount = data.details?.totals?.grandTotal
     ? parseInt(data.details.totals.grandTotal, 10)
     : 0;
@@ -104,7 +104,7 @@ async function handleTransactionCompleted(event: TransactionCompletedEvent): Pro
       id: `pur_${data.id}`,
       customerId: customer.id,
       paddleTransactionId: data.id,
-      productId: firstItem?.price?.productId ?? 'pro_01kxzjx7vt45fbgtzd1fjp2tct',
+      productId: firstItem?.price?.productId ?? '',
       priceId,
       amount,
       currency: data.currencyCode,

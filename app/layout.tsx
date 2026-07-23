@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "PromptForge",
   description: "Precision prompts at the speed of thought. Transform ideas into optimized, high-performance instructions.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", rel: "icon", type: "image/svg+xml" },
+    ],
+  },
   metadataBase: new URL("https://prompt-forge.vercel.app"),
   openGraph: {
     title: "PromptForge",

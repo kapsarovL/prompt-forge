@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,9 +7,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       <header className="border-b border-zinc-900/50">
         <div className="max-w-3xl mx-auto px-6 py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <Logo size={32} showWordmark={false} />
             <span className="text-sm font-semibold tracking-widest uppercase text-zinc-300">PromptForge</span>
           </Link>
           <Link href="/" className="text-xs text-zinc-600 hover:text-zinc-300 transition-colors">

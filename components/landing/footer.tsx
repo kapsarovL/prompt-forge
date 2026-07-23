@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 const FOOTER_LINKS = {
   Product: [
@@ -30,9 +30,7 @@ export function Footer() {
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
+              <Logo size={32} showWordmark={false} />
               <span className="text-sm font-semibold tracking-widest uppercase text-zinc-300">PromptForge</span>
             </Link>
             <p className="text-xs text-zinc-600 font-light leading-relaxed max-w-xs">

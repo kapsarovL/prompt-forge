@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, MessageSquare, Settings, History, Menu, X, Github } from "lucide-react";
+import { MessageSquare, Settings, History, Menu, X, Github } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { Logo } from "@/components/logo";
 
 interface ForgeNavbarProps {
   onOpenFeedback: () => void;
@@ -20,10 +21,10 @@ export function ForgeNavbar({ onOpenFeedback, onOpenSettings, onOpenVersions, ha
       <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.08] mix-blend-overlay pointer-events-none" />
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center group-hover:bg-amber-500 transition-colors shadow-[0_0_16px_-4px_rgba(245,158,11,0.2)] group-hover:shadow-[0_0_20px_-4px_rgba(245,158,11,0.4)]">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-sm font-semibold tracking-tight text-white">PromptForge</span>
+          <Logo
+            size={40}
+            className="group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.3)] transition-all"
+          />
         </Link>
 
         <div className="hidden md:flex items-center gap-1 text-xs font-medium text-zinc-400">

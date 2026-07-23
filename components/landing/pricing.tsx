@@ -63,7 +63,7 @@ export function PricingSection() {
             </div>
 
             <PaddleCheckoutButton
-              priceId={process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? "pri_01kxzjy13k8y1r5qs70f2m7e8h"}
+              priceId={process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? ''}
               className="group w-full flex items-center justify-center gap-2 py-3.5 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-all active:scale-[0.98]"
             >
               Buy for $5

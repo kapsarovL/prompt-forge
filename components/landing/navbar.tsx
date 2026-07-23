@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -18,10 +19,11 @@ export function Navbar() {
   return (
     <nav className="relative z-20 flex items-center justify-between px-6 md:px-8 max-w-[1400px] mx-auto py-5">
       <Link href="/" className="flex items-center gap-3 group">
-        <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center group-hover:bg-amber-500 transition-colors">
-          <Sparkles className="w-4 h-4 text-white" />
-        </div>
-        <span className="text-sm font-semibold tracking-widest uppercase text-zinc-300">PromptForge</span>
+        <Logo
+          size={40}
+          variant="uppercase"
+          className="group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.3)] transition-all"
+        />
       </Link>
 
       <div className="hidden md:flex items-center gap-8">

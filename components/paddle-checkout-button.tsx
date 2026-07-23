@@ -54,6 +54,7 @@ export function PaddleCheckoutButton({
     <button
       onClick={handleClick}
       disabled={disabled || loading || !paddle}
+      suppressHydrationWarning
       className={className}
       {...rest}
     >
