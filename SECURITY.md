@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-PromptForge is a client-side application — no user data or API keys are transmitted to our servers. However, if you discover a security vulnerability, please report it privately.
+If you discover a security vulnerability in PromptForge, please report it privately.
 
 **Do not** open a public GitHub issue for security vulnerabilities.
 
@@ -18,3 +18,10 @@ Send details to **opensource@prismaflux.dev**. We'll acknowledge receipt within 
 ## Scope
 
 This policy covers the PromptForge codebase and its dependencies. For vulnerabilities in third-party dependencies, please report them to the respective maintainers.
+
+## Security Architecture
+
+- **API keys** — Stored in browser localStorage, never sent to our servers. Users bring their own keys.
+- **Client-side encryption** — Optional AES-256-GCM + PBKDF2 encryption for stored API keys
+- **Server-side** — Paddle webhooks handle payment events. Database stores only Paddle customer/subscription records (no API keys or prompt data).
+- **No user accounts** — No passwords, no email collection, no tracking.

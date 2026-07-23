@@ -7,14 +7,16 @@ Thanks for your interest in contributing! Here's how to get started.
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/your-username/prompt-forge.git`
 3. Install dependencies: `pnpm install`
-4. Copy `.env.example` to `.env.local` and add your Gemini API key
+4. Copy `.env.example` to `.env.local` and add your API keys (or skip — keys can be set in-app)
 5. Run the dev server: `pnpm dev`
 
-## Development
+## Architecture
 
-- The app is fully client-side (Next.js App Router with `"use client"`)
-- All persistent data uses localStorage
-- API calls go directly to Google Gemini via `@google/genai`
+- **Next.js 16 App Router** with Server Components and Server Actions
+- **Client-side** — prompt generation, refinement, evaluation, and encryption all run in the browser
+- **Server-side** — Paddle webhooks, customer portal, access control via Neon Postgres
+- **AI providers** — Gemini, Anthropic Claude, OpenAI, and OpenCode (all via client-side API calls with user-provided keys)
+- **Payments** — Paddle integration for subscriptions and one-time purchases
 
 ## Making Changes
 
@@ -36,7 +38,7 @@ All tests must pass before a pull request can be merged. If you're adding a new 
 
 ## Reporting Bugs
 
-Open a [bug report](https://github.com/prismaflux/prompt-forge/issues/new?template=bug_report.md) with:
+Open a [bug report](https://github.com/kapsarovL/prompt-forge/issues/new?template=bug_report.md) with:
 - A clear description of the issue
 - Steps to reproduce
 - Expected vs actual behavior
