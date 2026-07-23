@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/promptforge-thumb.webp",
+        url: "https://prompt-forge.vercel.app/promptforge-thumb.webp",
         width: 1200,
         height: 630,
         alt: "PromptForge — AI Prompt Crafting for Freelancers",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PromptForge",
     description: "Precision prompts at the speed of thought. Transform ideas into optimized, high-performance instructions.",
-    images: ["/promptforge-thumb.webp"],
+    images: ["https://prompt-forge.vercel.app/promptforge-thumb.webp"],
   },
   robots: {
     index: true,
