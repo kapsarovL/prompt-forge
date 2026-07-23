@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { StorageInit } from "@/components/storage-init";
 import "./globals.css";
@@ -51,6 +52,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <StorageInit />
         {children}
+        <Analytics />
       </body>
     </html>);
 }
