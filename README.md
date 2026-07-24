@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="public/pf-logo.svg" alt="PromptForge" width="120" />
+  <img src="public/promptforge-thumb.png" alt="PromptForge — AI prompt engineering workspace" width="100%" />
 </p>
 
 <h1 align="center">PromptForge</h1>
 
 <p align="center">
-  AI prompt crafting workspace — craft, refine, evaluate, and optimize LLM prompts.
+  <strong>AI prompt engineering workspace</strong> — craft, refine, evaluate, and optimize LLM prompts entirely in the browser.
 </p>
 
 <p align="center">
@@ -31,9 +31,11 @@
 
 ## What is PromptForge?
 
-PromptForge is a prompt engineering workspace that helps you turn rough ideas into structured, high-performing LLM prompts. Generate, refine, evaluate, and organize — all in one place.
+PromptForge is a client-side AI prompt engineering workspace built for freelancers, content creators, and professionals who need structured, high-performing LLM prompts — not just one-shot chat replies.
 
-**Bring your own API keys.** PromptForge connects directly to Gemini, Anthropic Claude, OpenAI, and OpenCode. Your keys stay in your browser — we never see them.
+Turn rough intent into production-ready prompts through a focused cycle: **Generate → Refine → Evaluate → Organize**. Every prompt gets versioned automatically so you never lose a good iteration.
+
+**Bring your own API keys.** PromptForge connects directly to Gemini, Anthropic Claude, OpenAI, and OpenCode. Your keys stay in your browser — we never see them. Zero accounts, zero server storage, zero lock-in.
 
 ## Features
 
