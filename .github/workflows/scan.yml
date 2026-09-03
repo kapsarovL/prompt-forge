@@ -13,7 +13,7 @@ permissions:
 jobs:
   scan:
     name: gitleaks / osv-scanner / trivy-fs
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     permissions:
       contents: read
     steps:
