@@ -35,6 +35,8 @@ jobs:
 
       - name: trivy fs (report - app transitives have no fix path, so no exit-code gate)
         uses: aquasecurity/trivy-action@0.35.0
+        env:
+          TRIVY_TIMEOUT: 15m
         with:
           scan-type: fs
           scan-ref: .
