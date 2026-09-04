@@ -10,3 +10,16 @@ overrides:
   esbuild: ^0.25.0
   postcss: ^8.5.22
   sharp: ^0.35.0
+  # HIGH: DoS via unbounded expansion length (GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895)
+  # Scoped per major line: minimatch@3 needs the 1.x line, so keep each on its own
+  # line rather than an unscoped override (which would force 5.x onto minimatch@3).
+  'brace-expansion@<2': '>=1.1.17 <2'
+  'brace-expansion@>=4': '>=5.0.9'
+  # HIGH: crash/prototype-write + unbounded memory growth (GHSA-73wf, GHSA-c83g)
+  browserslist: '>=4.28.7'
+  # HIGH: exponential parsing time DoS (GHSA-5p4m-2wfm-xmqj); stay on 4.x (eslintrc compat)
+  'js-yaml@<5': '>=4.3.1 <5'
+  # HIGH: custom generators can loop indefinitely (GHSA-2v37-7h3g-55p8); stay on 3.x (postcss range)
+  'nanoid@<4': '>=3.3.18 <4'
+  # HIGH: undici request/response smuggling via interleaved headers (GHSA-4cwx-7wf7-3272); stay on 7.x (jsdom range)
+  'undici@>=7 <8': '>=7.29.0 <8'
