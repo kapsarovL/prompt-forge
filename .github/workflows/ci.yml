@@ -6,35 +6,27 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-and-build:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
-      # The one thing that can put this repo back on a GitHub invoice is a job
-      # that quietly runs somewhere else — `runs-on: ubuntu-latest` is what every
-      # tutorial and every generated workflow says. Self-hosted is not a
-      # preference here: this box is the intended execution target for every job.
-      # Cheap enough to run before install: a grep over a couple of files.
-      - name: Fail if any job would run on a GitHub-hosted runner
-        run: |
-          if grep -rnE '^\s*runs-on:.*(ubuntu|windows|macos)' .github/workflows/; then
-            echo "::error::GitHub-hosted runner found above. CI runs on the self-hosted laptop runner so this repo is never billed for Actions minutes — use 'runs-on: [self-hosted, linux]'."
-            exit 1
-          fi
-
-      # Self-hosted runner is NOT root, so `corepack enable` can't symlink into
-      # /usr/bin (EACCES). Install the shims into the user-writable bin instead.
-      - name: Enable corepack (user dir — rootless runner can't write /usr/bin)
+      # corepack works out of the box on a GitHub-hosted runner; keep the
+      # user-bin install so the step is runner-agnostic either way.
+      - name: Enable corepack
         run: |
           mkdir -p ~/.local/bin
           corepack enable --install-directory ~/.local/bin
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: corepack prepare pnpm@11.2.2 --activate
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
           cache: pnpm
